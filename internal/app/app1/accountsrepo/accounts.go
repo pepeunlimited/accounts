@@ -157,14 +157,6 @@ func (mysql accountsMySQL) Transfer(ctx context.Context, fromAmount int64, fromA
 		return nil, err
 	}
 
-	// check if is the to account = 'cash'
-	if _, err := mysql.GetAccountByUserIDAndType(ctx, toUserID, Cash); err != nil {
-		if tx != nil {
-			tx.Rollback()
-		}
-		return nil, err
-	}
-
 	//write tx history
 	if err = mysql.createTX(ctx, fromAccountID, fromAmount, Charge, tx); err != nil {
 		if tx != nil {
