@@ -17,7 +17,7 @@ func (ac AccountType) String() string {
 func AccountTypeFromString(ac string) AccountType {
 	ac = strings.ToLower(ac)
 	switch ac {
-	case "coint":
+	case "coin":
 		return Coin
 	case "cash":
 		return Cash

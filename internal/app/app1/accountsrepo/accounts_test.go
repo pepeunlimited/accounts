@@ -168,6 +168,26 @@ func TestAccountsMySQL_DoTransferOCC(t *testing.T) {
 	time.Sleep(3 * time.Second)
 }
 
+func TestAccountsMySQL_WithdrawOcc(t *testing.T) {
+	ctx := context.TODO()
+	client := mysql.NewEntClient()
+	accounts := NewAccountsRepository(client)
+	accounts.DeleteAll(ctx)
+	fromUserId := int64(1)
+	fromAccount, err := accounts.CreateCashAccount(ctx, fromUserId)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	accounts.DoDeposit(ctx, int64(200000), fromAccount.ID, fromUserId)
+	withdrawAmount := int64(100)
+	for i := 0; i < 100; i++ {
+		go accounts.DoWithdraw(ctx, -withdrawAmount, fromAccount.ID, fromUserId)
+	}
+	time.Sleep(3 * time.Second)
+}
+
+
 func TestAccountsMySQL_Withdraw(t *testing.T) {
 	ctx := context.TODO()
 	client := mysql.NewEntClient()
@@ -180,12 +200,7 @@ func TestAccountsMySQL_Withdraw(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-
-
-
 	accounts.DoDeposit(ctx, int64(200), fromAccount.ID, fromUserId)
-
-
 	withdrawAmount := int64(100)
 	err = accounts.DoWithdraw(ctx, -withdrawAmount, fromAccount.ID, fromUserId)
 	if err != nil {
