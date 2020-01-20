@@ -21,4 +21,4 @@ VERSION_SLUG="${VERSION#v}"
 echo "-- Updating tags to point to version $VERSION --"
 echo ""
 
-docker tag "pepeunlimited/grpc-starter-kit:${VERSION_SLUG}" "pepeunlimited/grpc-starter-kit:latest"
+docker tag "pepeunlimited/accounts:${VERSION_SLUG}" "pepeunlimited/accounts:latest"

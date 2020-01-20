@@ -14,5 +14,5 @@ VERSION_SLUG="${VERSION#v}"
 echo "-- Pushing tags $VERSION_SLUG and latest up to dockerhub --"
 echo ""
 
-docker push "pepeunlimited/grpc-starter-kit:$VERSION_SLUG"
-docker push "pepeunlimited/grpc-starter-kit:latest"
+docker push "pepeunlimited/accounts:$VERSION_SLUG"
+docker push "pepeunlimited/accounts:latest"

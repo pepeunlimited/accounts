@@ -29,4 +29,4 @@ echo "-- Building release docker images for version $VERSION --"
 echo ""
 VERSION_SLUG="${VERSION#v}"
 
-docker build --no-cache --build-arg version=${VERSION_SLUG} -t pepeunlimited/grpc-starter-kit:${VERSION_SLUG} -f ../../build/package/app1/Dockerfile ../../
+docker build --no-cache --build-arg version=${VERSION_SLUG} -t pepeunlimited/accounts:${VERSION_SLUG} -f ../../build/package/app1/Dockerfile ../../

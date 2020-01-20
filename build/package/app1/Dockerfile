@@ -4,7 +4,7 @@
 FROM golang:1.13.4-alpine as build
 
 # Set the Current Working Directory inside the container
-WORKDIR $GOPATH/src/github.com/pepeunlimited/grpc-starter-kit
+WORKDIR $GOPATH/src/github.com/pepeunlimited/accounts
 
 # Copy everything from the current directory to the PWD(Present Working Directory) inside the container
 COPY . .
@@ -27,7 +27,7 @@ LABEL description="Show case of the using docker hub."
 # This is intended to be run from the hooks/build script, which sets this
 # appropriately based on git tags.
 ARG version
-LABEL com.pepeunlimited.grpcstarterkit.version=$version
+LABEL com.pepeunlimited.accounts.version=$version
 
 # Add Maintainer Info
 LABEL maintainer="Simo Ala-Kotila <simo.alakotila@gmail.com>"
