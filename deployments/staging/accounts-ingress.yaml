@@ -11,6 +11,6 @@ spec:
       http:
         paths:
           - backend:
-              serviceName: todo
+              serviceName: accounts
               servicePort: 80
             path: /twirp/pepeunlimited.accounts.AccountService/*
