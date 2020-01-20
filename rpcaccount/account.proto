@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package pepeunlimited.accounts;
+option go_package = "rpcaccount";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+// https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/wrappers.proto
+
+service AccountService {
+
+    rpc CreateDeposit(CreateDepositParams)     returns (CreateDepositResponse);
+
+    rpc CreateWithdraw(CreateWithdrawParams)   returns (CreateWithdrawResponse);
+
+    rpc CreateTransfer(CreateTransferParams)   returns (CreateTransferResponse);
+
+    rpc CreateAccount(CreateAccountParams)     returns (Account);
+
+    rpc GetAccounts(GetAccountsParams)     returns (GetAccountsResponse);
+
+    rpc GetAccount(GetAccountParams)           returns (Account);
+}
+
+message CreateDepositParams {}
+
+message CreateDepositResponse {}
+
+message CreateWithdrawParams {}
+
+message CreateWithdrawResponse {}
+
+message CreateTransferParams {}
+
+message CreateTransferResponse {}
+
+message GetAccountsParams {
+    google.protobuf.StringValue account_type = 1; // required
+    int64 user_id                            = 2; // required
+}
+
+message CreateAccountParams {
+    string account_type = 1; // required
+    int64 user_id       = 2; // required
+}
+
+message GetAccountsResponse {
+    repeated Account accounts = 1; // required
+    int64  user_id            = 2; // required
+}
+
+message GetAccountParams {
+    int64  account_id = 1; // required
+    int64  user_id    = 2; // required
+}
+
+message Account {
+    int64 balance   = 1;
+    string type     = 2;
+    int64  user_id  = 3;
+    int64  id       = 4;
+}

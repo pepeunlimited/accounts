@@ -14,11 +14,12 @@ import (
 func TestAccountServer_CreateAccountAndGet(t *testing.T) {
 	ctx := context.TODO()
 	userId := int64(1)
-	ctx = rpcz.AddUserId(userId)
+
 	server := NewAccountServer(mysql.NewEntClient())
 	server.accounts.DeleteAll(ctx)
 	coin, err := server.CreateAccount(ctx, &rpcaccount.CreateAccountParams{
 		AccountType: "coin",
+		UserId:userId,
 	})
 	if err != nil {
 		t.Error(err)
@@ -29,6 +30,7 @@ func TestAccountServer_CreateAccountAndGet(t *testing.T) {
 	}
 	cash, err := server.CreateAccount(ctx, &rpcaccount.CreateAccountParams{
 		AccountType: "cash",
+		UserId:userId,
 	})
 	if err != nil {
 		t.Error(err)
@@ -48,6 +50,7 @@ func TestAccountServer_CreateAccountAndGet(t *testing.T) {
 
 	account, err := server.GetAccount(ctx, &rpcaccount.GetAccountParams{
 		AccountId: coin.Id,
+		UserId:userId,
 	})
 	if err != nil {
 		t.Error(err)
@@ -67,6 +70,7 @@ func TestAccountServer_NotFound(t *testing.T) {
 
 	account, err := server.GetAccount(ctx, &rpcaccount.GetAccountParams{
 		AccountId: 333333333333,
+		UserId:userId,
 	})
 	if err == nil {
 		t.FailNow()
@@ -83,10 +87,10 @@ func TestAccountServer_NotFound(t *testing.T) {
 func TestAccountServer_GetAccounts(t *testing.T) {
 	ctx := context.TODO()
 	userId := int64(1)
-	ctx = rpcz.AddUserId(userId)
+
 	server := NewAccountServer(mysql.NewEntClient())
 	server.accounts.DeleteAll(ctx)
-	resp0, err := server.GetAccounts(ctx, &rpcaccount.GetAccountsParams{})
+	resp0, err := server.GetAccounts(ctx, &rpcaccount.GetAccountsParams{UserId:userId})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -96,11 +100,13 @@ func TestAccountServer_GetAccounts(t *testing.T) {
 	}
 	server.CreateAccount(ctx, &rpcaccount.CreateAccountParams{
 		AccountType: "coin",
+		UserId:userId,
 	})
 	server.CreateAccount(ctx, &rpcaccount.CreateAccountParams{
 		AccountType: "cash",
+		UserId:userId,
 	})
-	resp1, err := server.GetAccounts(ctx,&rpcaccount.GetAccountsParams{})
+	resp1, err := server.GetAccounts(ctx,&rpcaccount.GetAccountsParams{UserId:userId,})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -112,6 +118,7 @@ func TestAccountServer_GetAccounts(t *testing.T) {
 		AccountType: &wrappers.StringValue{
 			Value: "coin",
 		},
+		UserId:userId,
 	})
 	if err != nil {
 		t.Error(err)
@@ -128,6 +135,7 @@ func TestAccountServer_GetAccounts(t *testing.T) {
 		AccountType: &wrappers.StringValue{
 			Value: "cash",
 		},
+		UserId:userId,
 	})
 	if err != nil {
 		t.Error(err)

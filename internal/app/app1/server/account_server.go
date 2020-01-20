@@ -29,10 +29,6 @@ func (server AccountServer) CreateTransfer(ctx context.Context, params *rpcaccou
 }
 
 func (server AccountServer) CreateAccount(ctx context.Context, params *rpcaccount.CreateAccountParams) (*rpcaccount.Account, error) {
-	userId, err := rpcz.GetUserId(ctx)
-	if err != nil {
-		return nil, twirp.RequiredArgumentError("user_id")
-	}
 	ac, err := server.validator.CreateAccount(params)
 	if err != nil {
 		return nil, err
@@ -40,9 +36,9 @@ func (server AccountServer) CreateAccount(ctx context.Context, params *rpcaccoun
 	var account *ent.Accounts
 	switch *ac {
 	case accountsrepo.Coin:
-		account, err = server.accounts.CreateCoinAccount(ctx, userId)
+		account, err = server.accounts.CreateCoinAccount(ctx, params.UserId)
 	case accountsrepo.Cash:
-		account, err = server.accounts.CreateCashAccount(ctx, userId)
+		account, err = server.accounts.CreateCashAccount(ctx, params.UserId)
 	}
 	if err != nil {
 		return nil, server.isAccountError(err)
@@ -51,15 +47,11 @@ func (server AccountServer) CreateAccount(ctx context.Context, params *rpcaccoun
 }
 
 func (server AccountServer) GetAccounts(ctx context.Context, params *rpcaccount.GetAccountsParams) (*rpcaccount.GetAccountsResponse, error) {
-	userId, err := rpcz.GetUserId(ctx)
-	if err != nil {
-		return nil, twirp.RequiredArgumentError("user_id")
-	}
 	ac, err := server.validator.GetAccounts(params)
 	if err != nil {
 		return nil, err
 	}
-	accounts, err := server.accounts.GetAccountsByUserID(ctx, userId, ac)
+	accounts, err := server.accounts.GetAccountsByUserID(ctx, params.UserId, ac)
 	if err != nil {
 		return nil, server.isAccountError(err)
 	}
@@ -67,15 +59,11 @@ func (server AccountServer) GetAccounts(ctx context.Context, params *rpcaccount.
 }
 
 func (server AccountServer) GetAccount(ctx context.Context, params *rpcaccount.GetAccountParams) (*rpcaccount.Account, error) {
-	userId, err := rpcz.GetUserId(ctx)
-	if err != nil {
-		return nil, twirp.RequiredArgumentError("user_id")
-	}
-	err = server.validator.GetAccount(params)
+	err := server.validator.GetAccount(params)
 	if err != nil {
 		return nil, err
 	}
-	account, err := server.accounts.GetAccountByUserAndAccountID(ctx, userId, int(params.AccountId))
+	account, err := server.accounts.GetAccountByUserAndAccountID(ctx, params.UserId, int(params.AccountId))
 	if err != nil {
 		return nil, server.isAccountError(err)
 	}

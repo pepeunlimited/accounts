@@ -17,6 +17,10 @@ func (v AccountServerValidator) CreateAccount(params *rpcaccount.CreateAccountPa
 	if ac == accountsrepo.Unknown {
 		return nil, twirp.InvalidArgumentError("account_type", params.AccountType)
 	}
+	if params.UserId == 0 {
+		return nil, twirp.RequiredArgumentError("user_id")
+	}
+
 	return &ac, nil
 }
 
@@ -24,10 +28,16 @@ func (v AccountServerValidator) GetAccount(params *rpcaccount.GetAccountParams) 
 	if params.AccountId == 0 {
 		return twirp.RequiredArgumentError("account_id")
 	}
+	if params.UserId == 0 {
+		return twirp.RequiredArgumentError("user_id")
+	}
 	return nil
 }
 
 func (v AccountServerValidator) GetAccounts(params *rpcaccount.GetAccountsParams) (*accountsrepo.AccountType, error) {
+	if params.UserId == 0 {
+		return nil, twirp.RequiredArgumentError("user_id")
+	}
 	if params.AccountType == nil || validator2.IsEmpty(params.AccountType.Value) {
 		return nil, nil
 	}
