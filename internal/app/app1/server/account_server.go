@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/pepeunlimited/accounts/internal/app/app1/accountsrepo"
 	"github.com/pepeunlimited/accounts/internal/app/app1/ent"
 	"github.com/pepeunlimited/accounts/internal/app/app1/validator"
@@ -25,7 +24,7 @@ func (server AccountServer) CreateWithdraw(context.Context, *rpcaccount.CreateWi
 	panic("implement me")
 }
 
-func (server AccountServer) CreateTransfer(context.Context, *rpcaccount.CreateTransferParams) (*rpcaccount.CreateTransferResponse, error) {
+func (server AccountServer) CreateTransfer(ctx context.Context, params *rpcaccount.CreateTransferParams) (*rpcaccount.CreateTransferResponse, error) {
 	panic("implement me")
 }
 
@@ -51,8 +50,20 @@ func (server AccountServer) CreateAccount(ctx context.Context, params *rpcaccoun
 	return toAccountRPC(account), nil
 }
 
-func (server AccountServer) GetAccounts(context.Context, *empty.Empty) (*rpcaccount.GetAccountsResponse, error) {
-	panic("implement me")
+func (server AccountServer) GetAccounts(ctx context.Context, params *rpcaccount.GetAccountsParams) (*rpcaccount.GetAccountsResponse, error) {
+	userId, err := rpcz.GetUserId(ctx)
+	if err != nil {
+		return nil, twirp.RequiredArgumentError("user_id")
+	}
+	ac, err := server.validator.GetAccounts(params)
+	if err != nil {
+		return nil, err
+	}
+	accounts, err := server.accounts.GetAccountsByUserID(ctx, userId, ac)
+	if err != nil {
+		return nil, server.isAccountError(err)
+	}
+	return toAccountsRPC(accounts), nil
 }
 
 func (server AccountServer) GetAccount(ctx context.Context, params *rpcaccount.GetAccountParams) (*rpcaccount.Account, error) {

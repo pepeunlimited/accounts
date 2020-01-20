@@ -1,10 +1,11 @@
 package main
 
 import (
+	"github.com/pepeunlimited/accounts/internal/app/app1/mysql"
+	"github.com/pepeunlimited/accounts/internal/app/app1/server"
+	"github.com/pepeunlimited/accounts/rpcaccount"
 	"github.com/pepeunlimited/microservice-kit/headers"
 	"github.com/pepeunlimited/microservice-kit/middleware"
-	"github.com/pepeunlimited/rpc-starter-kit/internal/app/app1/server"
-	"github.com/pepeunlimited/rpc-starter-kit/rpctodo"
 	"log"
 	"net/http"
 )
@@ -14,12 +15,13 @@ const (
 )
 
 func main() {
-	log.Printf("Starting the TodoServer... version=[%v]", Version)
+	log.Printf("Starting the AccountServer... version=[%v]", Version)
 
-	ts := rpctodo.NewTodoServiceServer(server.NewTodoServer(), nil)
+	client := mysql.NewEntClient()
+	ts := rpcaccount.NewAccountServiceServer(server.NewAccountServer(client), nil)
 
 	mux := http.NewServeMux()
-	mux.Handle(ts.PathPrefix(), middleware.Adapt(ts, headers.Username()))
+	mux.Handle(ts.PathPrefix(), middleware.Adapt(ts, headers.UserId()))
 
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Panic(err)

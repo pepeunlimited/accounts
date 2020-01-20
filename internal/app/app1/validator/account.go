@@ -27,6 +27,17 @@ func (v AccountServerValidator) GetAccount(params *rpcaccount.GetAccountParams) 
 	return nil
 }
 
+func (v AccountServerValidator) GetAccounts(params *rpcaccount.GetAccountsParams) (*accountsrepo.AccountType, error) {
+	if params.AccountType == nil || validator2.IsEmpty(params.AccountType.Value) {
+		return nil, nil
+	}
+	ac := accountsrepo.AccountTypeFromString(params.AccountType.Value)
+	if ac == accountsrepo.Unknown {
+		return nil, twirp.InvalidArgumentError("account_type", params.AccountType.Value)
+	}
+	return &ac, nil
+}
+
 
 func NewAccountServerValidator() AccountServerValidator {
 	return AccountServerValidator{}

@@ -13,3 +13,13 @@ func toAccountRPC(account *ent.Accounts) *rpcaccount.Account {
 		Id:   int64(account.ID),
 	}
 }
+
+func toAccountsRPC(accounts []*ent.Accounts) *rpcaccount.GetAccountsResponse {
+	toRPCs := make([]*rpcaccount.Account, 0)
+	for _, account := range accounts {
+		toRPCs = append(toRPCs, toAccountRPC(account))
+	}
+	return &rpcaccount.GetAccountsResponse{
+		Accounts: toRPCs,
+	}
+}

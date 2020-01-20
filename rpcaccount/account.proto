@@ -18,7 +18,7 @@ service AccountService {
 
     rpc CreateAccount(CreateAccountParams)     returns (Account);
 
-    rpc GetAccounts(google.protobuf.Empty)     returns (GetAccountsResponse);
+    rpc GetAccounts(GetAccountsParams)     returns (GetAccountsResponse);
 
     rpc GetAccount(GetAccountParams)           returns (Account);
 }
@@ -34,6 +34,10 @@ message CreateWithdrawResponse {}
 message CreateTransferParams {}
 
 message CreateTransferResponse {}
+
+message GetAccountsParams {
+    google.protobuf.StringValue account_type = 1; // required
+}
 
 message CreateAccountParams {
     string account_type = 1; // required

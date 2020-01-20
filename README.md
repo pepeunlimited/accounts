@@ -1,6 +1,6 @@
-# rpc-stater-kit
+# accounts
 
-A starting point project to create `todo`-service
+A starting point project to create `accounts`-service
 
 ## Go Directories
 

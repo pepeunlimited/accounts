@@ -29,7 +29,7 @@ type AccountsRepository interface {
 	CreateCoinAccount(ctx context.Context, userId int64) 															(*ent.Accounts, error)
 
 	GetAccountByID(ctx context.Context, accountID int)								 	  							(*ent.Accounts, error)
-	GetAccountByUserID(ctx context.Context, userID int64) 	 						 	  							(*ent.Accounts, error)
+	GetAccountsByUserID(ctx context.Context, userID int64, accountType *AccountType) 	 						 	  							([]*ent.Accounts, error)
 	GetAccountByUserAndAccountID(ctx context.Context, userID int64, accountID int) 	  	  							(*ent.Accounts, error)
 	GetAccountByUserIDAndType(ctx context.Context, userID int64, accountType AccountType)							(*ent.Accounts, error)
 
@@ -228,8 +228,19 @@ func (mysql accountsMySQL) GetAccountByID(ctx context.Context, accountID int) (*
 	panic("implement me")
 }
 
-func (mysql accountsMySQL) GetAccountByUserID(ctx context.Context, userID int64) (*ent.Accounts, error) {
-	panic("implement me")
+func (mysql accountsMySQL) GetAccountsByUserID(ctx context.Context, userID int64, accountType *AccountType) ([]*ent.Accounts, error) {
+	if accountType == nil {
+		accounts, err := mysql.client.Accounts.Query().Where(accounts.UserID(userID)).All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return accounts, nil
+	}
+	account, err := mysql.GetAccountByUserIDAndType(ctx, userID, *accountType)
+	if err != nil {
+		return nil, err
+	}
+	return []*ent.Accounts{account}, nil
 }
 
 func (mysql accountsMySQL) GetAccountByUserAndAccountID(ctx context.Context, userID int64, accountID int) (*ent.Accounts, error) {
