@@ -28,7 +28,6 @@ Speed up implementing the database access using [`ent`](https://github.com/faceb
 #### [`twirp`](https://github.com/twitchtv/twirp)
 -  `$ protoc --proto_path=$GOPATH/src:. --twirp_out=. --go_out=. account.proto`
 
-
 ### `/scripts`
 
 #### `misc`
