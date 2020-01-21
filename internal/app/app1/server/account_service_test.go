@@ -8,6 +8,7 @@ import (
 	"github.com/pepeunlimited/accounts/rpcaccount"
 	"github.com/pepeunlimited/microservice-kit/rpcz"
 	"github.com/twitchtv/twirp"
+	"log"
 	"testing"
 )
 
@@ -148,4 +149,104 @@ func TestAccountServer_GetAccounts(t *testing.T) {
 		t.Log(resp3)
 		t.FailNow()
 	}
+}
+
+func TestAccountServer_CreateDeposit(t *testing.T) {
+	ctx := context.TODO()
+	userId := int64(1)
+
+	server := NewAccountServer(mysql.NewEntClient())
+	server.accounts.DeleteAll(ctx)
+
+	coin, err := server.CreateAccount(ctx, &rpcaccount.CreateAccountParams{
+		AccountType: "Coin",
+		UserId:      userId,
+	})
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	server.accounts.DoDeposit(ctx, 10, int(coin.Id), userId)
+	account, err := server.CreateDeposit(ctx, &rpcaccount.CreateDepositParams{
+		UserId:      userId,
+		Amount:      10,
+		AccountType: "Coin",
+	})
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if account.Balance != 20 {
+		t.FailNow()
+	}
+}
+
+func TestAccountServer_CreateWithdraw(t *testing.T) {
+	ctx := context.TODO()
+	userId := int64(1)
+
+	server := NewAccountServer(mysql.NewEntClient())
+	server.accounts.DeleteAll(ctx)
+
+	_, err := server.CreateAccount(ctx, &rpcaccount.CreateAccountParams{
+		AccountType: "Cash",
+		UserId:      userId,
+	})
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	server.CreateDeposit(ctx, &rpcaccount.CreateDepositParams{
+		UserId:      userId,
+		Amount:      20,
+		AccountType: "Cash",
+	})
+
+	withdrawed, err := server.CreateWithdraw(ctx, &rpcaccount.CreateWithdrawParams{
+		UserId: userId,
+		Amount: -20,
+	})
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if withdrawed.Balance != 0 {
+		t.FailNow()
+	}
+}
+
+func TestAccountServer_CreateTransfer(t *testing.T) {
+	ctx := context.TODO()
+	toUserID := int64(1)
+	fromUserID := int64(2)
+	server := NewAccountServer(mysql.NewEntClient())
+	server.accounts.DeleteAll(ctx)
+
+	server.CreateAccount(ctx, &rpcaccount.CreateAccountParams{
+		AccountType: "cash",
+		UserId:      toUserID,
+	})
+	server.CreateAccount(ctx, &rpcaccount.CreateAccountParams{
+		AccountType: "coin",
+		UserId:      fromUserID,
+	})
+
+	server.CreateDeposit(ctx, &rpcaccount.CreateDepositParams{
+		UserId: 	 fromUserID,
+		Amount:      200,
+		AccountType: "coin",
+	})
+
+	transfer, err := server.CreateTransfer(ctx, &rpcaccount.CreateTransferParams{
+		FromUserId: fromUserID,
+		FromAmount: -200,
+		ToUserId:   toUserID,
+		ToAmount:   100,
+	})
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	log.Print(transfer)
 }

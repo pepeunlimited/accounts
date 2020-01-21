@@ -217,7 +217,7 @@ func TestAccountsMySQL_UpdateBalanceLowBalance(t *testing.T) {
 
 
 	userId := int64(1)
-	account, err := accounts.CreateCoinAccount(ctx, userId)
+	account, err := accounts.CreateCashAccount(ctx, userId)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -236,7 +236,7 @@ func TestAccountsMySQL_UpdateBalanceLowBalance(t *testing.T) {
 	}
 	tx.Commit()
 
-	tx, err = accounts.Deposit(ctx, -30, account.ID, userId)
+	tx, err = accounts.Withdraw(ctx, -30, account.ID, userId)
 	if err == nil {
 		t.FailNow()
 	}

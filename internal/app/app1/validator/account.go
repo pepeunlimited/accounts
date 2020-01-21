@@ -13,15 +13,15 @@ func (v AccountServerValidator) CreateAccount(params *rpcaccount.CreateAccountPa
 	if validator2.IsEmpty(params.AccountType) {
 		return nil, twirp.RequiredArgumentError("account_type")
 	}
-	ac := accountsrepo.AccountTypeFromString(params.AccountType)
-	if ac == accountsrepo.Unknown {
-		return nil, twirp.InvalidArgumentError("account_type", params.AccountType)
+	ac, err := v.accountType(params.AccountType)
+	if err != nil {
+		return nil, err
 	}
 	if params.UserId == 0 {
 		return nil, twirp.RequiredArgumentError("user_id")
 	}
 
-	return &ac, nil
+	return ac, nil
 }
 
 func (v AccountServerValidator) GetAccount(params *rpcaccount.GetAccountParams) error {
@@ -41,13 +41,63 @@ func (v AccountServerValidator) GetAccounts(params *rpcaccount.GetAccountsParams
 	if params.AccountType == nil || validator2.IsEmpty(params.AccountType.Value) {
 		return nil, nil
 	}
-	ac := accountsrepo.AccountTypeFromString(params.AccountType.Value)
+	ac, err := v.accountType(params.AccountType.Value)
+	if err != nil {
+		return nil, err
+	}
+	return ac, nil
+}
+
+func (v AccountServerValidator) CreateDeposit(params *rpcaccount.CreateDepositParams) (*accountsrepo.AccountType, error) {
+	if params.Amount < 0 {
+		return nil, twirp.InvalidArgumentError("amount","amount < 0")
+	}
+	if params.UserId == 0 {
+		return nil, twirp.RequiredArgumentError("user_id")
+	}
+	if params.Amount == 0 {
+		return nil, twirp.RequiredArgumentError("amount")
+	}
+	ac, err := v.accountType(params.AccountType)
+	if err != nil {
+		return nil, err
+	}
+	return ac, nil
+}
+
+func (v AccountServerValidator) accountType(accountType string) (*accountsrepo.AccountType, error) {
+	ac := accountsrepo.AccountTypeFromString(accountType)
 	if ac == accountsrepo.Unknown {
-		return nil, twirp.InvalidArgumentError("account_type", params.AccountType.Value)
+		return nil, twirp.InvalidArgumentError("account_type", accountType)
 	}
 	return &ac, nil
 }
 
+func (v AccountServerValidator) CreateWithdraw(params *rpcaccount.CreateWithdrawParams) error {
+	if params.UserId == 0 {
+		return twirp.RequiredArgumentError("user_id")
+	}
+	if params.Amount > 0 {
+		return twirp.InvalidArgumentError("amount","amount > 0")
+	}
+	return nil
+}
+
+func (v AccountServerValidator) CreateTransfer(params *rpcaccount.CreateTransferParams) error {
+	if params.FromAmount > 0 {
+		return twirp.InvalidArgumentError("from_amount","amount > 0")
+	}
+	if params.FromUserId == 0 {
+		return twirp.RequiredArgumentError("from_user_id")
+	}
+	if params.ToUserId == 0 {
+		return twirp.RequiredArgumentError("to_user_id")
+	}
+	if params.ToAmount < 0 {
+		return twirp.InvalidArgumentError("to_amount","amount < 0")
+	}
+	return nil
+}
 
 func NewAccountServerValidator() AccountServerValidator {
 	return AccountServerValidator{}

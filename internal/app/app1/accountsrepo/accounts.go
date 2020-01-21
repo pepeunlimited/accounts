@@ -22,6 +22,7 @@ var (
 	ErrUserAccountExist 		= errors.New("accounts: user account exist")
 	ErrLowAccountBalance    	= errors.New("accounts: unable to process payment; low account balance")
 	ErrOptimisticConcurrency 	= errors.New("accounts: unable to process payment; optimistic concurrency exception")
+	ErrInvalidAmount 			= errors.New("accounts: invalid amount")
 )
 
 type AccountsRepository interface {
@@ -60,6 +61,7 @@ func (mysql accountsMySQL) DoWithdraw(ctx context.Context, withdrawAmount int64,
 }
 
 func (mysql accountsMySQL) DoTransfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64) error {
+
 	transfer, err := mysql.Transfer(ctx, fromAmount, fromAccountID, fromUserID, toCashAccountID, toUserID, toAmount)
 	if err != nil {
 		if transfer != nil {
@@ -82,6 +84,9 @@ func (mysql accountsMySQL) DoDeposit(ctx context.Context, amount int64, toAccoun
 }
 
 func (mysql accountsMySQL) Deposit(ctx context.Context, amount int64, toAccountID int, toUserID int64) (*sql.Tx, error) {
+	if amount < 0 {
+		return nil, ErrInvalidAmount
+	}
 	toAccount, err := mysql.GetAccountByUserAndAccountID(ctx, toUserID, toAccountID)
 	if err != nil {
 		return nil, err
@@ -110,6 +115,10 @@ func (mysql accountsMySQL) Deposit(ctx context.Context, amount int64, toAccountI
 }
 
 func (mysql accountsMySQL) Withdraw(ctx context.Context, withdrawAmount int64, fromCashAccountID int, fromUserID int64) (*sql.Tx, error) {
+	if withdrawAmount > 0 {
+		return nil, ErrInvalidAmount
+	}
+
 	fromAccount, err := mysql.GetAccountByUserIDAndType(ctx, fromUserID, Cash)
 	if err != nil {
 		return nil, err
@@ -137,6 +146,13 @@ func (mysql accountsMySQL) Withdraw(ctx context.Context, withdrawAmount int64, f
 }
 
 func (mysql accountsMySQL) Transfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64) (*sql.Tx, error) {
+	if fromAmount > 0 {
+		return nil, ErrInvalidAmount
+	}
+	if toAmount < 0 {
+		return nil, ErrInvalidAmount
+	}
+
 	fromAccount, err := mysql.GetAccountByUserIDAndType(ctx, fromUserID, Coin)
 	if err != nil {
 		return nil, err
@@ -258,25 +274,14 @@ func (mysql accountsMySQL) updateBalance(ctx context.Context, tx *sql.Tx, userId
 	// NOTICE: required to use raw sql because .ent doesn't support occ..
 	balance += amount
 	if balance < 0 {
-		//err = mysql.createTXHistory(ctx, tx, amount, txtype.String(), accountID)
-		//if err != nil {
-		//	tx.Rollback()
-		//	return err
-		//}
-		//err := tx.Commit()
-		//if err != nil {
-		//	return err
-		//}
 		return ErrLowAccountBalance
 	}
 	result, err := tx.ExecContext(ctx, updateBalanceSQL, balance, version+1, accountId, version)
 	if err != nil {
-		//tx.Rollback()
 		return err
 	}
 	isOccChanged, err := result.RowsAffected()
 	if err != nil {
-		//tx.Rollback()
 		return err
 	}
 	// validate does the version has changed during tx..
