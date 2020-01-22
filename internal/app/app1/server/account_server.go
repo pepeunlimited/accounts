@@ -5,7 +5,7 @@ import (
 	"github.com/pepeunlimited/accounts/internal/app/app1/accountsrepo"
 	"github.com/pepeunlimited/accounts/internal/app/app1/ent"
 	"github.com/pepeunlimited/accounts/internal/app/app1/validator"
-	"github.com/pepeunlimited/accounts/accountrpc"
+	"github.com/pepeunlimited/accounts/accountsrpc"
 	"github.com/pepeunlimited/microservice-kit/rpcz"
 	"github.com/twitchtv/twirp"
 	"log"
@@ -16,7 +16,7 @@ type AccountServer struct {
 	validator validator.AccountServerValidator
 }
 
-func (server AccountServer) CreateDeposit(ctx context.Context, params *accountrpc.CreateDepositParams) (*accountrpc.Account, error) {
+func (server AccountServer) CreateDeposit(ctx context.Context, params *accountsrpc.CreateDepositParams) (*accountsrpc.Account, error) {
 	accountType, err := server.validator.CreateDeposit(params)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (server AccountServer) CreateDeposit(ctx context.Context, params *accountrp
 			err := deposit.Rollback()
 			if err != nil {
 				log.Print("accounts-service: deposit rollback failure: "+err.Error())
-				return nil, twirp.NewError(twirp.Aborted, accountrpc.AccountTXsRollback)
+				return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsRollback)
 			}
 		}
 		return nil, server.isAccountError(err)
@@ -39,7 +39,7 @@ func (server AccountServer) CreateDeposit(ctx context.Context, params *accountrp
 	err = deposit.Commit()
 	if err != nil {
 		log.Print("accounts-service: deposit commit failure: "+err.Error())
-		return nil, twirp.NewError(twirp.Aborted, accountrpc.AccountTXsCommit)
+		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsCommit)
 	}
 	deposited, err := server.accounts.GetAccountByUserIDAndType(ctx, params.UserId, *accountType)
 	if err != nil {
@@ -48,7 +48,7 @@ func (server AccountServer) CreateDeposit(ctx context.Context, params *accountrp
 	return toAccountRPC(deposited), nil
 }
 
-func (server AccountServer) CreateWithdraw(ctx context.Context, params *accountrpc.CreateWithdrawParams) (*accountrpc.Account, error) {
+func (server AccountServer) CreateWithdraw(ctx context.Context, params *accountsrpc.CreateWithdrawParams) (*accountsrpc.Account, error) {
 	err := server.validator.CreateWithdraw(params)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (server AccountServer) CreateWithdraw(ctx context.Context, params *accountr
 	}
 
 	if !account.IsWithdrawable {
-		return nil, twirp.NewError(twirp.Aborted, accountrpc.WithdrawIsDisabled)
+		return nil, twirp.NewError(twirp.Aborted, accountsrpc.WithdrawIsDisabled)
 	}
 
 	withdraw, err := server.accounts.Withdraw(ctx, params.Amount, account.ID, params.UserId)
@@ -68,7 +68,7 @@ func (server AccountServer) CreateWithdraw(ctx context.Context, params *accountr
 			err := withdraw.Rollback()
 			if err != nil {
 				log.Print("accounts-service: withdraw rollback failure: "+err.Error())
-				return nil, twirp.NewError(twirp.Aborted, accountrpc.AccountTXsRollback)
+				return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsRollback)
 			}
 		}
 		return nil, server.isAccountError(err)
@@ -76,7 +76,7 @@ func (server AccountServer) CreateWithdraw(ctx context.Context, params *accountr
 	err = withdraw.Commit()
 	if err != nil {
 		log.Print("accounts-service: withdraw commit failure: "+err.Error())
-		return nil, twirp.NewError(twirp.Aborted, accountrpc.AccountTXsCommit)
+		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsCommit)
 	}
 	deposited, err := server.accounts.GetAccountByUserIDAndType(ctx, params.UserId, accountsrepo.Cash)
 	if err != nil {
@@ -85,7 +85,7 @@ func (server AccountServer) CreateWithdraw(ctx context.Context, params *accountr
 	return toAccountRPC(deposited), nil
 }
 
-func (server AccountServer) CreateTransfer(ctx context.Context, params *accountrpc.CreateTransferParams) (*accountrpc.CreateTransferResponse, error) {
+func (server AccountServer) CreateTransfer(ctx context.Context, params *accountsrpc.CreateTransferParams) (*accountsrpc.CreateTransferResponse, error) {
 	err := server.validator.CreateTransfer(params)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (server AccountServer) CreateTransfer(ctx context.Context, params *accountr
 			err := transfer.Rollback()
 			if err != nil {
 				log.Print("accounts-service: transfer rollback failure: "+err.Error())
-				return nil, twirp.NewError(twirp.Aborted, accountrpc.AccountTXsRollback)
+				return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsRollback)
 			}
 		}
 		return nil, server.isAccountError(err)
@@ -112,7 +112,7 @@ func (server AccountServer) CreateTransfer(ctx context.Context, params *accountr
 	err = transfer.Commit()
 	if err != nil {
 		log.Print("accounts-service: transfer commit failure: "+err.Error())
-		return nil, twirp.NewError(twirp.Aborted, accountrpc.AccountTXsCommit)
+		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsCommit)
 	}
 	from, err := server.accounts.GetAccountByUserIDAndType(ctx, params.FromUserId, accountsrepo.Coin)
 	if err != nil {
@@ -122,13 +122,13 @@ func (server AccountServer) CreateTransfer(ctx context.Context, params *accountr
 	if err != nil {
 		return nil, server.isAccountError(err)
 	}
-	return &accountrpc.CreateTransferResponse{
+	return &accountsrpc.CreateTransferResponse{
 		From: toAccountRPC(from),
 		To:   toAccountRPC(to),
 	}, nil
 }
 
-func (server AccountServer) CreateAccount(ctx context.Context, params *accountrpc.CreateAccountParams) (*accountrpc.Account, error) {
+func (server AccountServer) CreateAccount(ctx context.Context, params *accountsrpc.CreateAccountParams) (*accountsrpc.Account, error) {
 	ac, err := server.validator.CreateAccount(params)
 	if err != nil {
 		return nil, err
@@ -146,7 +146,7 @@ func (server AccountServer) CreateAccount(ctx context.Context, params *accountrp
 	return toAccountRPC(account), nil
 }
 
-func (server AccountServer) GetAccounts(ctx context.Context, params *accountrpc.GetAccountsParams) (*accountrpc.GetAccountsResponse, error) {
+func (server AccountServer) GetAccounts(ctx context.Context, params *accountsrpc.GetAccountsParams) (*accountsrpc.GetAccountsResponse, error) {
 	ac, err := server.validator.GetAccounts(params)
 	if err != nil {
 		return nil, err
@@ -158,7 +158,7 @@ func (server AccountServer) GetAccounts(ctx context.Context, params *accountrpc.
 	return toAccountsRPC(accounts), nil
 }
 
-func (server AccountServer) GetAccount(ctx context.Context, params *accountrpc.GetAccountParams) (*accountrpc.Account, error) {
+func (server AccountServer) GetAccount(ctx context.Context, params *accountsrpc.GetAccountParams) (*accountsrpc.Account, error) {
 	err := server.validator.GetAccount(params)
 	if err != nil {
 		return nil, err
@@ -173,13 +173,13 @@ func (server AccountServer) GetAccount(ctx context.Context, params *accountrpc.G
 func (server AccountServer) isAccountError(err error) error {
 	switch err {
 	case accountsrepo.ErrAccountNotExist:
-		return twirp.NotFoundError(accountrpc.AccountNotFound).WithMeta(rpcz.Reason, accountrpc.AccountNotFound)
+		return twirp.NotFoundError(accountsrpc.AccountNotFound).WithMeta(rpcz.Reason, accountsrpc.AccountNotFound)
 	case accountsrepo.ErrUserAccountExist:
-		return twirp.NewError(twirp.AlreadyExists, err.Error()).WithMeta(rpcz.Reason, accountrpc.AccountExist)
+		return twirp.NewError(twirp.AlreadyExists, err.Error()).WithMeta(rpcz.Reason, accountsrpc.AccountExist)
 	case accountsrepo.ErrInvalidAmount:
-		return twirp.NewError(twirp.Aborted, err.Error()).WithMeta(rpcz.Reason, accountrpc.AccountInvalidAmount)
+		return twirp.NewError(twirp.Aborted, err.Error()).WithMeta(rpcz.Reason, accountsrpc.AccountInvalidAmount)
 	case accountsrepo.ErrLowAccountBalance:
-		return twirp.NewError(twirp.Aborted, err.Error()).WithMeta(rpcz.Reason, accountrpc.LowAccountBalance)
+		return twirp.NewError(twirp.Aborted, err.Error()).WithMeta(rpcz.Reason, accountsrpc.LowAccountBalance)
 	}
 	log.Print("accounts: unknown error: "+err.Error())
 	return twirp.NewError(twirp.Internal ,"unknown error: "+err.Error())

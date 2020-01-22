@@ -2,11 +2,11 @@ package server
 
 import (
 	"github.com/pepeunlimited/accounts/internal/app/app1/ent"
-	"github.com/pepeunlimited/accounts/accountrpc"
+	"github.com/pepeunlimited/accounts/accountsrpc"
 )
 
-func toAccountRPC(account *ent.Accounts) *accountrpc.Account {
-	return &accountrpc.Account{
+func toAccountRPC(account *ent.Accounts) *accountsrpc.Account {
+	return &accountsrpc.Account{
 		Balance: account.Balance,
 		Type:    account.Type,
 		UserId:  account.UserID,
@@ -14,12 +14,12 @@ func toAccountRPC(account *ent.Accounts) *accountrpc.Account {
 	}
 }
 
-func toAccountsRPC(accounts []*ent.Accounts) *accountrpc.GetAccountsResponse {
-	toRPCs := make([]*accountrpc.Account, 0)
+func toAccountsRPC(accounts []*ent.Accounts) *accountsrpc.GetAccountsResponse {
+	toRPCs := make([]*accountsrpc.Account, 0)
 	for _, account := range accounts {
 		toRPCs = append(toRPCs, toAccountRPC(account))
 	}
-	return &accountrpc.GetAccountsResponse{
+	return &accountsrpc.GetAccountsResponse{
 		Accounts: toRPCs,
 	}
 }

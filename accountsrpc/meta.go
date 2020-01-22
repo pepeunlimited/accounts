@@ -1,4 +1,4 @@
-package accountrpc
+package accountsrpc
 
 import (
 	"github.com/pepeunlimited/microservice-kit/rpcz"

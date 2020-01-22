@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/pepeunlimited/accounts/internal/app/app1/mysql"
 	"github.com/pepeunlimited/accounts/internal/app/app1/server"
-	"github.com/pepeunlimited/accounts/accountrpc"
+	"github.com/pepeunlimited/accounts/accountsrpc"
 	"github.com/pepeunlimited/microservice-kit/headers"
 	"github.com/pepeunlimited/microservice-kit/middleware"
 	"log"
@@ -18,7 +18,7 @@ func main() {
 	log.Printf("Starting the AccountServer... version=[%v]", Version)
 
 	client := mysql.NewEntClient()
-	ts := accountrpc.NewAccountServiceServer(server.NewAccountServer(client), nil)
+	ts := accountsrpc.NewAccountServiceServer(server.NewAccountServer(client), nil)
 
 	mux := http.NewServeMux()
 	mux.Handle(ts.PathPrefix(), middleware.Adapt(ts, headers.UserId()))

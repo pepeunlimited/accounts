@@ -5,7 +5,7 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/pepeunlimited/accounts/internal/app/app1/accountsrepo"
 	"github.com/pepeunlimited/accounts/internal/app/app1/mysql"
-	"github.com/pepeunlimited/accounts/accountrpc"
+	"github.com/pepeunlimited/accounts/accountsrpc"
 	"github.com/pepeunlimited/microservice-kit/rpcz"
 	"github.com/twitchtv/twirp"
 	"log"
@@ -18,7 +18,7 @@ func TestAccountServer_CreateAccountAndGet(t *testing.T) {
 
 	server := NewAccountServer(mysql.NewEntClient())
 	server.accounts.DeleteAll(ctx)
-	coin, err := server.CreateAccount(ctx, &accountrpc.CreateAccountParams{
+	coin, err := server.CreateAccount(ctx, &accountsrpc.CreateAccountParams{
 		AccountType: "coin",
 		UserId:userId,
 	})
@@ -29,7 +29,7 @@ func TestAccountServer_CreateAccountAndGet(t *testing.T) {
 	if coin == nil {
 		t.FailNow()
 	}
-	cash, err := server.CreateAccount(ctx, &accountrpc.CreateAccountParams{
+	cash, err := server.CreateAccount(ctx, &accountsrpc.CreateAccountParams{
 		AccountType: "cash",
 		UserId:userId,
 	})
@@ -49,7 +49,7 @@ func TestAccountServer_CreateAccountAndGet(t *testing.T) {
 		t.FailNow()
 	}
 
-	account, err := server.GetAccount(ctx, &accountrpc.GetAccountParams{
+	account, err := server.GetAccount(ctx, &accountsrpc.GetAccountParams{
 		AccountId: coin.Id,
 		UserId:userId,
 	})
@@ -69,7 +69,7 @@ func TestAccountServer_NotFound(t *testing.T) {
 	server := NewAccountServer(mysql.NewEntClient())
 	server.accounts.DeleteAll(ctx)
 
-	account, err := server.GetAccount(ctx, &accountrpc.GetAccountParams{
+	account, err := server.GetAccount(ctx, &accountsrpc.GetAccountParams{
 		AccountId: 333333333333,
 		UserId:userId,
 	})
@@ -79,8 +79,8 @@ func TestAccountServer_NotFound(t *testing.T) {
 	if account != nil {
 		t.FailNow()
 	}
-	if !accountrpc.IsReason(err.(twirp.Error), accountrpc.AccountNotFound) {
-		t.Error(err.(twirp.Error).Meta(accountrpc.AccountNotFound))
+	if !accountsrpc.IsReason(err.(twirp.Error), accountsrpc.AccountNotFound) {
+		t.Error(err.(twirp.Error).Meta(accountsrpc.AccountNotFound))
 		t.FailNow()
 	}
 }
@@ -91,7 +91,7 @@ func TestAccountServer_GetAccounts(t *testing.T) {
 
 	server := NewAccountServer(mysql.NewEntClient())
 	server.accounts.DeleteAll(ctx)
-	resp0, err := server.GetAccounts(ctx, &accountrpc.GetAccountsParams{UserId: userId})
+	resp0, err := server.GetAccounts(ctx, &accountsrpc.GetAccountsParams{UserId: userId})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -99,15 +99,15 @@ func TestAccountServer_GetAccounts(t *testing.T) {
 	if len(resp0.Accounts) != 0 {
 		t.FailNow()
 	}
-	server.CreateAccount(ctx, &accountrpc.CreateAccountParams{
+	server.CreateAccount(ctx, &accountsrpc.CreateAccountParams{
 		AccountType: "coin",
 		UserId:userId,
 	})
-	server.CreateAccount(ctx, &accountrpc.CreateAccountParams{
+	server.CreateAccount(ctx, &accountsrpc.CreateAccountParams{
 		AccountType: "cash",
 		UserId:userId,
 	})
-	resp1, err := server.GetAccounts(ctx,&accountrpc.GetAccountsParams{UserId: userId,})
+	resp1, err := server.GetAccounts(ctx,&accountsrpc.GetAccountsParams{UserId: userId,})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -115,7 +115,7 @@ func TestAccountServer_GetAccounts(t *testing.T) {
 	if len(resp1.Accounts) != 2 {
 		t.FailNow()
 	}
-	resp2, err := server.GetAccounts(ctx, &accountrpc.GetAccountsParams{
+	resp2, err := server.GetAccounts(ctx, &accountsrpc.GetAccountsParams{
 		AccountType: &wrappers.StringValue{
 			Value: "coin",
 		},
@@ -132,7 +132,7 @@ func TestAccountServer_GetAccounts(t *testing.T) {
 		t.Log(resp2)
 		t.FailNow()
 	}
-	resp3, err := server.GetAccounts(ctx, &accountrpc.GetAccountsParams{
+	resp3, err := server.GetAccounts(ctx, &accountsrpc.GetAccountsParams{
 		AccountType: &wrappers.StringValue{
 			Value: "cash",
 		},
@@ -158,7 +158,7 @@ func TestAccountServer_CreateDeposit(t *testing.T) {
 	server := NewAccountServer(mysql.NewEntClient())
 	server.accounts.DeleteAll(ctx)
 
-	coin, err := server.CreateAccount(ctx, &accountrpc.CreateAccountParams{
+	coin, err := server.CreateAccount(ctx, &accountsrpc.CreateAccountParams{
 		AccountType: "Coin",
 		UserId:      userId,
 	})
@@ -167,7 +167,7 @@ func TestAccountServer_CreateDeposit(t *testing.T) {
 		t.FailNow()
 	}
 	server.accounts.DoDeposit(ctx, 10, int(coin.Id), userId)
-	account, err := server.CreateDeposit(ctx, &accountrpc.CreateDepositParams{
+	account, err := server.CreateDeposit(ctx, &accountsrpc.CreateDepositParams{
 		UserId:      userId,
 		Amount:      10,
 		AccountType: "Coin",
@@ -188,7 +188,7 @@ func TestAccountServer_CreateWithdraw(t *testing.T) {
 	server := NewAccountServer(mysql.NewEntClient())
 	server.accounts.DeleteAll(ctx)
 
-	_, err := server.CreateAccount(ctx, &accountrpc.CreateAccountParams{
+	_, err := server.CreateAccount(ctx, &accountsrpc.CreateAccountParams{
 		AccountType: "Cash",
 		UserId:      userId,
 	})
@@ -196,13 +196,13 @@ func TestAccountServer_CreateWithdraw(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	server.CreateDeposit(ctx, &accountrpc.CreateDepositParams{
+	server.CreateDeposit(ctx, &accountsrpc.CreateDepositParams{
 		UserId:      userId,
 		Amount:      20,
 		AccountType: "Cash",
 	})
 
-	withdrawed, err := server.CreateWithdraw(ctx, &accountrpc.CreateWithdrawParams{
+	withdrawed, err := server.CreateWithdraw(ctx, &accountsrpc.CreateWithdrawParams{
 		UserId: userId,
 		Amount: -20,
 	})
@@ -222,22 +222,22 @@ func TestAccountServer_CreateTransfer(t *testing.T) {
 	server := NewAccountServer(mysql.NewEntClient())
 	server.accounts.DeleteAll(ctx)
 
-	server.CreateAccount(ctx, &accountrpc.CreateAccountParams{
+	server.CreateAccount(ctx, &accountsrpc.CreateAccountParams{
 		AccountType: "cash",
 		UserId:      toUserID,
 	})
-	server.CreateAccount(ctx, &accountrpc.CreateAccountParams{
+	server.CreateAccount(ctx, &accountsrpc.CreateAccountParams{
 		AccountType: "coin",
 		UserId:      fromUserID,
 	})
 
-	server.CreateDeposit(ctx, &accountrpc.CreateDepositParams{
+	server.CreateDeposit(ctx, &accountsrpc.CreateDepositParams{
 		UserId: 	 fromUserID,
 		Amount:      200,
 		AccountType: "coin",
 	})
 
-	transfer, err := server.CreateTransfer(ctx, &accountrpc.CreateTransferParams{
+	transfer, err := server.CreateTransfer(ctx, &accountsrpc.CreateTransferParams{
 		FromUserId: fromUserID,
 		FromAmount: -200,
 		ToUserId:   toUserID,
