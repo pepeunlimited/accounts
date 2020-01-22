@@ -26,7 +26,7 @@ $ curl -H "Content-Type: application/json" -X POST "api.dev.pepeunlimited.com/tw
 
 ##### CreateDeposit
 ```
-$ curl -H "Content-Type: application/json" -X POST "api.dev.pepeunlimited.com/twirp/pepeunlimited.accounts.AccountService/CreateDeposit"  -d '{"user_id": 1, "account_type": "cash", "amount": 200}'
+$ curl -H "Content-Type: application/json" -X POST "api.dev.pepeunlimited.com/twirp/pepeunlimited.accounts.Acco©©untService/CreateDeposit"  -d '{"user_id": 1, "account_type": "cash", "amount": 200}'
 ```
 ##### CreateTransfer
 ```

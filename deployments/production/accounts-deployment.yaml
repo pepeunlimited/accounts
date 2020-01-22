@@ -19,14 +19,14 @@ spec:
             - name: MYSQL_DATABASE
               value: accounts
             - name: MYSQL_HOST
-              value: external-mysql.default.svc
+              value: mysql
             - name: MYSQL_PORT
               value: "3306"
             - name: MYSQL_ROOT_PASSWORD
               value: root
             - name: MYSQL_USER
               value: root
-          image: pepeunlimited/accounts:0.1.2
+          image: pepeunlimited/accounts:0.1.3
           name: accounts
           ports:
             - containerPort: 8080
