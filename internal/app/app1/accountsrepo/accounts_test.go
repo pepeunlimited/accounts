@@ -79,47 +79,6 @@ func TestAccountsMySQL_Transfer(t *testing.T) {
 	tx.Commit()
 }
 
-func TestAccountsMySQL_TransferReferenceNumberExist(t *testing.T) {
-	ctx := context.TODO()
-	client := mysql.NewEntClient()
-	accounts := NewAccountsRepository(client)
-	accounts.DeleteAll(ctx)
-
-	fromUserId := int64(1)
-	fromAmount := int64(50)
-
-	toUserId := int64(2)
-	toAmount := int64(40)
-
-	fromAccount, err := accounts.CreateCoinAccount(ctx, fromUserId)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	accounts.DoDeposit(ctx, int64(200), fromAccount.ID, fromUserId)
-	toAccount, err := accounts.CreateCashAccount(ctx, toUserId)
-
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	referenceNumber := "referenceNumber001"
-	tx, err := accounts.Transfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount, &referenceNumber)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	tx.Commit()
-	tx, err = accounts.Transfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount, &referenceNumber)
-	if err == nil {
-		t.FailNow()
-	}
-	if err != ErrReferenceNumberExist {
-		t.FailNow()
-	}
-}
-
 func TestAccountsMySQL_TransferLowBalance(t *testing.T) {
 	ctx := context.TODO()
 	client := mysql.NewEntClient()

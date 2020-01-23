@@ -30,7 +30,7 @@ CREATE TABLE txs (
     created_at          DATETIME(3) NOT NULL,                  --
     amount              BIGINT NOT NULL,                       -- int64 -9223372036854775807 - 9223372036854775807
     accounts_id         INT(10) NOT NULL,                      --
-    reference_number   CHAR(36) UNIQUE NULL,                         --
+    reference_number    CHAR(36) NULL,                         --
     FOREIGN KEY (accounts_id) REFERENCES accounts (id),        --
     PRIMARY KEY (id)
 );

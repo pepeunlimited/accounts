@@ -229,21 +229,18 @@ func TestAccountServer_CreateTransfer(t *testing.T) {
 		AccountType: "coin",
 		UserId:      fromUserID,
 	})
-
 	server.CreateDeposit(ctx, &accountsrpc.CreateDepositParams{
 		UserId: 	 fromUserID,
 		Amount:      200,
 		AccountType: "coin",
 	})
-
+	referenceNumber := "reference-number"
 	transfer, err := server.CreateTransfer(ctx, &accountsrpc.CreateTransferParams{
 		FromUserId:      fromUserID,
 		FromAmount:      -200,
 		ToUserId:        toUserID,
 		ToAmount:        100,
-		ReferenceNumber: &wrappers.StringValue{
-			Value: "reference-number",
-		},
+		ReferenceNumber: &wrappers.StringValue{Value: referenceNumber},
 	})
 	if err != nil {
 		t.Error(err)

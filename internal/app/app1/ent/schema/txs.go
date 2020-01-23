@@ -20,7 +20,7 @@ func (Txs) Fields() []ent.Field {
 		field.String("tx_type").MaxLen(10).NotEmpty(),
 		field.Time("created_at"),
 		field.Int64("amount"),
-		field.String("reference_number").Unique().Optional().Nillable().MaxLen(36),
+		field.String("reference_number").Optional().Nillable().MaxLen(36),
 	}
 }
 

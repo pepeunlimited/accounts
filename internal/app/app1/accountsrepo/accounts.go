@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	mysql2 "github.com/go-sql-driver/mysql"
 	"github.com/pepeunlimited/accounts/internal/app/app1/ent"
 	"github.com/pepeunlimited/accounts/internal/app/app1/ent/accounts"
 	"github.com/pepeunlimited/microservice-kit/misc"
@@ -24,7 +23,6 @@ var (
 	ErrLowAccountBalance    	= errors.New("accounts: unable to process payment; low account balance")
 	ErrOptimisticConcurrency 	= errors.New("accounts: unable to process payment; optimistic concurrency exception")
 	ErrInvalidAmount 			= errors.New("accounts: invalid amount")
-	ErrReferenceNumberExist 	= errors.New("accounts: reference number exist")
 )
 
 type AccountsRepository interface {
@@ -176,7 +174,7 @@ func (mysql accountsMySQL) Transfer(ctx context.Context, fromAmount int64, fromA
 	}
 
 	//write tx history
-	if err = mysql.createTX(ctx, fromAccountID, fromAmount, Charge, tx, nil); err != nil {
+	if err = mysql.createTX(ctx, fromAccountID, fromAmount, Charge, tx, referenceNumber); err != nil {
 		if tx != nil {
 			tx.Rollback()
 		}
@@ -316,9 +314,6 @@ func (mysql accountsMySQL) createTX(ctx context.Context, accountID int, amount i
 	result, err := tx.ExecContext(ctx, createTXsSQL, types.String(), time.Now().UTC(), amount, accountID, rn)
 	if err != nil {
 		tx.Rollback()
-		if err.(*mysql2.MySQLError).Number == 1062 {
-			return ErrReferenceNumberExist
-		}
 		return err
 	}
 	_, err = result.LastInsertId()
