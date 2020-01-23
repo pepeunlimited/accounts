@@ -9,6 +9,7 @@ import (
 	"github.com/pepeunlimited/microservice-kit/rpcz"
 	"github.com/twitchtv/twirp"
 	"testing"
+	"time"
 )
 
 func TestAccountServer_CreateAccountAndGet(t *testing.T) {
@@ -249,4 +250,37 @@ func TestAccountServer_CreateTransfer(t *testing.T) {
 	if transfer == nil {
 		t.FailNow()
 	}
+}
+
+func TestAccountServer_CreateTransferOcc(t *testing.T) {
+	ctx := context.TODO()
+	toUserID := int64(1)
+	fromUserID := int64(2)
+	server := NewAccountServer(mysql.NewEntClient())
+	server.accounts.DeleteAll(ctx)
+
+	server.CreateAccount(ctx, &accountsrpc.CreateAccountParams{
+		AccountType: "cash",
+		UserId:      toUserID,
+	})
+	server.CreateAccount(ctx, &accountsrpc.CreateAccountParams{
+		AccountType: "coin",
+		UserId:      fromUserID,
+	})
+	server.CreateDeposit(ctx, &accountsrpc.CreateDepositParams{
+		UserId: 	 fromUserID,
+		Amount:      200,
+		AccountType: "coin",
+	})
+	referenceNumber := "reference-number"
+	for i := 0; i < 20 ;i++  {
+		go server.CreateTransfer(ctx, &accountsrpc.CreateTransferParams{
+			FromUserId:      fromUserID,
+			FromAmount:      -200,
+			ToUserId:        toUserID,
+			ToAmount:        100,
+			ReferenceNumber: &wrappers.StringValue{Value: referenceNumber},
+		})
+	}
+	time.Sleep(2 * time.Second)
 }

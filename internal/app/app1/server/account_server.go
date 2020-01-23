@@ -26,18 +26,11 @@ func (server AccountServer) CreateDeposit(ctx context.Context, params *accountsr
 	if err != nil {
 		return nil, server.isAccountError(err)
 	}
-	deposit, err := server.accounts.Deposit(ctx, params.Amount, account.ID, params.UserId)
+	tx, err := server.accounts.Deposit(ctx, params.Amount, account.ID, params.UserId)
 	if err != nil {
-		if deposit != nil {
-			err := deposit.Rollback()
-			if err != nil {
-				log.Print("accounts-service: deposit rollback failure: "+err.Error())
-				return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsRollback)
-			}
-		}
 		return nil, server.isAccountError(err)
 	}
-	err = deposit.Commit()
+	err = tx.Commit()
 	if err != nil {
 		log.Print("accounts-service: deposit commit failure: "+err.Error())
 		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsCommit)
@@ -63,18 +56,11 @@ func (server AccountServer) CreateWithdraw(ctx context.Context, params *accounts
 		return nil, twirp.NewError(twirp.Aborted, accountsrpc.WithdrawIsDisabled)
 	}
 
-	withdraw, err := server.accounts.Withdraw(ctx, params.Amount, account.ID, params.UserId)
+	tx, err := server.accounts.Withdraw(ctx, params.Amount, account.ID, params.UserId)
 	if err != nil {
-		if withdraw != nil {
-			err := withdraw.Rollback()
-			if err != nil {
-				log.Print("accounts-service: withdraw rollback failure: "+err.Error())
-				return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsRollback)
-			}
-		}
 		return nil, server.isAccountError(err)
 	}
-	err = withdraw.Commit()
+	err = tx.Commit()
 	if err != nil {
 		log.Print("accounts-service: withdraw commit failure: "+err.Error())
 		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsCommit)
@@ -100,18 +86,11 @@ func (server AccountServer) CreateTransfer(ctx context.Context, params *accounts
 		return nil, server.isAccountError(err)
 	}
 	referenceNumber := server.referenceNumber(params.ReferenceNumber)
-	transfer, err := server.accounts.Transfer(ctx, params.FromAmount, fromAccount.ID, params.FromUserId, toAccount.ID, params.ToUserId, params.ToAmount, referenceNumber)
+	tx, err := server.accounts.Transfer(ctx, params.FromAmount, fromAccount.ID, params.FromUserId, toAccount.ID, params.ToUserId, params.ToAmount, referenceNumber)
 	if err != nil {
-		if transfer != nil {
-			err := transfer.Rollback()
-			if err != nil {
-				log.Print("accounts-service: transfer rollback failure: "+err.Error())
-				return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsRollback)
-			}
-		}
 		return nil, server.isAccountError(err)
 	}
-	err = transfer.Commit()
+	err = tx.Commit()
 	if err != nil {
 		log.Print("accounts-service: transfer commit failure: "+err.Error())
 		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsCommit)

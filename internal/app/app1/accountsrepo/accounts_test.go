@@ -151,7 +151,6 @@ func TestAccountsMySQL_DoTransfer(t *testing.T) {
 	}
 }
 
-
 func TestAccountsMySQL_DoTransferOCC(t *testing.T) {
 	ctx := context.TODO()
 	client := mysql.NewEntClient()
@@ -174,7 +173,7 @@ func TestAccountsMySQL_DoTransferOCC(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 500; i++ {
 		go accounts.DoTransfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount, nil)
 	}
 	time.Sleep(3 * time.Second)
@@ -293,7 +292,7 @@ func TestAccountsMySQL_UpdateBalanceVersionOccTest(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	for i := 0; i < 3000; i++ {
+	for i := 0; i < 10; i++ {
 		go accounts.DoDeposit(ctx, 10, account.ID, userId)
 	}
 	time.Sleep(8 * time.Second)

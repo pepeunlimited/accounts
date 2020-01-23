@@ -52,21 +52,14 @@ type accountsMySQL struct {
 func (mysql accountsMySQL) DoWithdraw(ctx context.Context, withdrawAmount int64, fromCashAccountID int, fromUserID int64) error {
 	deposit, err := mysql.Withdraw(ctx, withdrawAmount, fromCashAccountID, fromUserID)
 	if err != nil {
-		if deposit != nil {
-			deposit.Rollback()
-		}
 		return err
 	}
 	return deposit.Commit()
 }
 
 func (mysql accountsMySQL) DoTransfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64, referenceNumber *string) error {
-
 	transfer, err := mysql.Transfer(ctx, fromAmount, fromAccountID, fromUserID, toCashAccountID, toUserID, toAmount, referenceNumber)
 	if err != nil {
-		if transfer != nil {
-			transfer.Rollback()
-		}
 		return err
 	}
 	return transfer.Commit()
@@ -75,9 +68,6 @@ func (mysql accountsMySQL) DoTransfer(ctx context.Context, fromAmount int64, fro
 func (mysql accountsMySQL) DoDeposit(ctx context.Context, amount int64, toAccountID int, toUserID int64) error {
 	deposit, err := mysql.Deposit(ctx, amount, toAccountID, toUserID)
 	if err != nil {
-		if deposit != nil {
-			deposit.Rollback()
-		}
 		return err
 	}
 	return deposit.Commit()
@@ -95,22 +85,13 @@ func (mysql accountsMySQL) Deposit(ctx context.Context, amount int64, toAccountI
 	if err != nil {
 		return nil, err
 	}
-
 	if err := mysql.updateBalance(ctx, tx, toUserID, toAccountID, amount, toAccount.Version, toAccount.Balance); err != nil {
-		if tx != nil {
-			tx.Rollback()
-		}
 		return nil, err
 	}
-
 	//write tx history
 	if err = mysql.createTX(ctx, toAccountID, amount, Deposit, tx, nil); err != nil {
-		if tx != nil {
-			tx.Rollback()
-		}
 		return nil, err
 	}
-
 	return tx, nil
 }
 
@@ -118,7 +99,6 @@ func (mysql accountsMySQL) Withdraw(ctx context.Context, withdrawAmount int64, f
 	if withdrawAmount > 0 {
 		return nil, ErrInvalidAmount
 	}
-
 	fromAccount, err := mysql.GetAccountByUserIDAndType(ctx, fromUserID, Cash)
 	if err != nil {
 		return nil, err
@@ -128,20 +108,12 @@ func (mysql accountsMySQL) Withdraw(ctx context.Context, withdrawAmount int64, f
 		return nil, err
 	}
 	if err := mysql.updateBalance(ctx, tx, fromUserID, fromCashAccountID, withdrawAmount, fromAccount.Version, fromAccount.Balance); err != nil {
-		if tx != nil {
-			tx.Rollback()
-		}
 		return nil, err
 	}
-
 	//write tx history
 	if err = mysql.createTX(ctx, fromCashAccountID, withdrawAmount, Withdraw, tx, nil); err != nil {
-		if tx != nil {
-			tx.Rollback()
-		}
 		return nil, err
 	}
-
 	return tx, nil
 }
 
@@ -152,7 +124,6 @@ func (mysql accountsMySQL) Transfer(ctx context.Context, fromAmount int64, fromA
 	if toAmount < 0 {
 		return nil, ErrInvalidAmount
 	}
-
 	fromAccount, err := mysql.GetAccountByUserIDAndType(ctx, fromUserID, Coin)
 	if err != nil {
 		return nil, err
@@ -165,37 +136,20 @@ func (mysql accountsMySQL) Transfer(ctx context.Context, fromAmount int64, fromA
 	if err != nil {
 		return nil, err
 	}
-
 	if err := mysql.updateBalance(ctx, tx, fromUserID, fromAccountID, fromAmount, fromAccount.Version, fromAccount.Balance); err != nil {
-		if tx != nil {
-			tx.Rollback()
-		}
 		return nil, err
 	}
-
 	//write tx history
 	if err = mysql.createTX(ctx, fromAccountID, fromAmount, Charge, tx, referenceNumber); err != nil {
-		if tx != nil {
-			tx.Rollback()
-		}
 		return nil, err
 	}
-
 	if err := mysql.updateBalance(ctx, tx, toUserID, toCashAccountID, toAmount, toAccount.Version, toAccount.Balance); err != nil {
-		if tx != nil {
-			tx.Rollback()
-		}
 		return nil, err
 	}
-
 	//write tx history
 	if err = mysql.createTX(ctx, toCashAccountID, toAmount, Transfer, tx, referenceNumber); err != nil {
-		if tx != nil {
-			tx.Rollback()
-		}
 		return nil, err
 	}
-
 	return tx, nil
 }
 
@@ -274,18 +228,22 @@ func (mysql accountsMySQL) updateBalance(ctx context.Context, tx *sql.Tx, userId
 	// NOTICE: required to use raw sql because .ent doesn't support occ..
 	balance += amount
 	if balance < 0 {
+		rollback(tx)
 		return ErrLowAccountBalance
 	}
 	result, err := tx.ExecContext(ctx, updateBalanceSQL, balance, version+1, accountId, version)
 	if err != nil {
+		rollback(tx)
 		return err
 	}
 	isOccChanged, err := result.RowsAffected()
 	if err != nil {
+		rollback(tx)
 		return err
 	}
 	// validate does the version has changed during tx..
 	if isOccChanged != 1 {
+		rollback(tx)
 		if mysql.isDebug {
 			log.Printf("accounts: occ issue for userID=%v accountID=%v amount=%v .. should do rollback..", userId, accountId, amount)
 		}
@@ -311,17 +269,18 @@ func (mysql accountsMySQL) createTX(ctx context.Context, accountID int, amount i
 		rn.String = *referenceNumber
 		rn.Valid = true
 	}
-	result, err := tx.ExecContext(ctx, createTXsSQL, types.String(), time.Now().UTC(), amount, accountID, rn)
+	_, err := tx.ExecContext(ctx, createTXsSQL, types.String(), time.Now().UTC(), amount, accountID, rn)
 	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	_, err = result.LastInsertId()
-	if err != nil {
-		tx.Rollback()
+		rollback(tx)
 		return err
 	}
 	return nil
+}
+
+func rollback(tx *sql.Tx) {
+	if err := tx.Rollback(); err != nil {
+		log.Print("accounts-repository: rollback failed: "+err.Error())
+	}
 }
 
 func NewAccountsRepository(client *ent.Client) AccountsRepository {
