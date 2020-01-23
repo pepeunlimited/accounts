@@ -26,7 +26,7 @@ spec:
               value: root
             - name: MYSQL_USER
               value: root
-          image: pepeunlimited/accounts:0.1.3
+          image: pepeunlimited/accounts:0.1.4
           name: accounts
           ports:
             - containerPort: 8080
