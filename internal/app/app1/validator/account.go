@@ -96,6 +96,11 @@ func (v AccountServerValidator) CreateTransfer(params *accountsrpc.CreateTransfe
 	if params.ToAmount < 0 {
 		return twirp.InvalidArgumentError("to_amount","amount < 0")
 	}
+	if params.ReferenceNumber != nil && !validator2.IsEmpty(params.ReferenceNumber.Value) {
+		if len(params.ReferenceNumber.Value) > 36 {
+			return twirp.InvalidArgumentError("reference_number", "max char is 36")
+		}
+	}
 	return nil
 }
 

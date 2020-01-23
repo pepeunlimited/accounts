@@ -17,6 +17,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldAmount holds the string denoting the amount vertex property in the database.
 	FieldAmount = "amount"
+	// FieldReferenceNumber holds the string denoting the reference_number vertex property in the database.
+	FieldReferenceNumber = "reference_number"
 
 	// Table holds the table name of the txs in the database.
 	Table = "txs"
@@ -35,6 +37,7 @@ var Columns = []string{
 	FieldTxType,
 	FieldCreatedAt,
 	FieldAmount,
+	FieldReferenceNumber,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the Txs type.
@@ -63,4 +66,9 @@ var (
 			return nil
 		}
 	}()
+
+	// descReferenceNumber is the schema descriptor for reference_number field.
+	descReferenceNumber = fields[3].Descriptor()
+	// ReferenceNumberValidator is a validator for the "reference_number" field. It is called by the builders before save.
+	ReferenceNumberValidator = descReferenceNumber.Validators[0].(func(string) error)
 )

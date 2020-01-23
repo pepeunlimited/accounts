@@ -172,7 +172,7 @@ func (au *AccountsUpdate) ExecX(ctx context.Context) {
 }
 
 func (au *AccountsUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	spec := &sqlgraph.UpdateSpec{
+	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   accounts.Table,
 			Columns: accounts.Columns,
@@ -183,63 +183,63 @@ func (au *AccountsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		},
 	}
 	if ps := au.predicates; len(ps) > 0 {
-		spec.Predicate = func(selector *sql.Selector) {
+		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
 	if value := au.balance; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: accounts.FieldBalance,
 		})
 	}
 	if value := au.addbalance; value != nil {
-		spec.Fields.Add = append(spec.Fields.Add, &sqlgraph.FieldSpec{
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: accounts.FieldBalance,
 		})
 	}
 	if value := au.version; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeUint8,
 			Value:  *value,
 			Column: accounts.FieldVersion,
 		})
 	}
 	if value := au.addversion; value != nil {
-		spec.Fields.Add = append(spec.Fields.Add, &sqlgraph.FieldSpec{
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeUint8,
 			Value:  *value,
 			Column: accounts.FieldVersion,
 		})
 	}
 	if value := au._type; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  *value,
 			Column: accounts.FieldType,
 		})
 	}
 	if value := au.is_withdrawable; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
 			Value:  *value,
 			Column: accounts.FieldIsWithdrawable,
 		})
 	}
 	if value := au.user_id; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: accounts.FieldUserID,
 		})
 	}
 	if value := au.adduser_id; value != nil {
-		spec.Fields.Add = append(spec.Fields.Add, &sqlgraph.FieldSpec{
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: accounts.FieldUserID,
@@ -262,7 +262,7 @@ func (au *AccountsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		for k, _ := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		spec.Edges.Clear = append(spec.Edges.Clear, edge)
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := au.txs; len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -281,9 +281,9 @@ func (au *AccountsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		for k, _ := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		spec.Edges.Add = append(spec.Edges.Add, edge)
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, spec); err != nil {
+	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, _spec); err != nil {
 		if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
 		}
@@ -444,7 +444,7 @@ func (auo *AccountsUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (auo *AccountsUpdateOne) sqlSave(ctx context.Context) (a *Accounts, err error) {
-	spec := &sqlgraph.UpdateSpec{
+	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   accounts.Table,
 			Columns: accounts.Columns,
@@ -456,56 +456,56 @@ func (auo *AccountsUpdateOne) sqlSave(ctx context.Context) (a *Accounts, err err
 		},
 	}
 	if value := auo.balance; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: accounts.FieldBalance,
 		})
 	}
 	if value := auo.addbalance; value != nil {
-		spec.Fields.Add = append(spec.Fields.Add, &sqlgraph.FieldSpec{
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: accounts.FieldBalance,
 		})
 	}
 	if value := auo.version; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeUint8,
 			Value:  *value,
 			Column: accounts.FieldVersion,
 		})
 	}
 	if value := auo.addversion; value != nil {
-		spec.Fields.Add = append(spec.Fields.Add, &sqlgraph.FieldSpec{
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeUint8,
 			Value:  *value,
 			Column: accounts.FieldVersion,
 		})
 	}
 	if value := auo._type; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  *value,
 			Column: accounts.FieldType,
 		})
 	}
 	if value := auo.is_withdrawable; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
 			Value:  *value,
 			Column: accounts.FieldIsWithdrawable,
 		})
 	}
 	if value := auo.user_id; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: accounts.FieldUserID,
 		})
 	}
 	if value := auo.adduser_id; value != nil {
-		spec.Fields.Add = append(spec.Fields.Add, &sqlgraph.FieldSpec{
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: accounts.FieldUserID,
@@ -528,7 +528,7 @@ func (auo *AccountsUpdateOne) sqlSave(ctx context.Context) (a *Accounts, err err
 		for k, _ := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		spec.Edges.Clear = append(spec.Edges.Clear, edge)
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := auo.txs; len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -547,12 +547,12 @@ func (auo *AccountsUpdateOne) sqlSave(ctx context.Context) (a *Accounts, err err
 		for k, _ := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		spec.Edges.Add = append(spec.Edges.Add, edge)
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	a = &Accounts{config: auo.config}
-	spec.Assign = a.assignValues
-	spec.ScanValues = a.scanValues()
-	if err = sqlgraph.UpdateNode(ctx, auo.driver, spec); err != nil {
+	_spec.Assign = a.assignValues
+	_spec.ScanValues = a.scanValues()
+	if err = sqlgraph.UpdateNode(ctx, auo.driver, _spec); err != nil {
 		if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
 		}

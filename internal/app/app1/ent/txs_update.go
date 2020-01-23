@@ -19,13 +19,15 @@ import (
 // TxsUpdate is the builder for updating Txs entities.
 type TxsUpdate struct {
 	config
-	tx_type         *string
-	created_at      *time.Time
-	amount          *int64
-	addamount       *int64
-	accounts        map[int]struct{}
-	clearedAccounts bool
-	predicates      []predicate.Txs
+	tx_type               *string
+	created_at            *time.Time
+	amount                *int64
+	addamount             *int64
+	reference_number      *string
+	clearreference_number bool
+	accounts              map[int]struct{}
+	clearedAccounts       bool
+	predicates            []predicate.Txs
 }
 
 // Where adds a new predicate for the builder.
@@ -60,6 +62,27 @@ func (tu *TxsUpdate) AddAmount(i int64) *TxsUpdate {
 	} else {
 		*tu.addamount += i
 	}
+	return tu
+}
+
+// SetReferenceNumber sets the reference_number field.
+func (tu *TxsUpdate) SetReferenceNumber(s string) *TxsUpdate {
+	tu.reference_number = &s
+	return tu
+}
+
+// SetNillableReferenceNumber sets the reference_number field if the given value is not nil.
+func (tu *TxsUpdate) SetNillableReferenceNumber(s *string) *TxsUpdate {
+	if s != nil {
+		tu.SetReferenceNumber(*s)
+	}
+	return tu
+}
+
+// ClearReferenceNumber clears the value of reference_number.
+func (tu *TxsUpdate) ClearReferenceNumber() *TxsUpdate {
+	tu.reference_number = nil
+	tu.clearreference_number = true
 	return tu
 }
 
@@ -98,6 +121,11 @@ func (tu *TxsUpdate) Save(ctx context.Context) (int, error) {
 			return 0, fmt.Errorf("ent: validator failed for field \"tx_type\": %v", err)
 		}
 	}
+	if tu.reference_number != nil {
+		if err := txs.ReferenceNumberValidator(*tu.reference_number); err != nil {
+			return 0, fmt.Errorf("ent: validator failed for field \"reference_number\": %v", err)
+		}
+	}
 	if len(tu.accounts) > 1 {
 		return 0, errors.New("ent: multiple assignments on a unique edge \"accounts\"")
 	}
@@ -127,7 +155,7 @@ func (tu *TxsUpdate) ExecX(ctx context.Context) {
 }
 
 func (tu *TxsUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	spec := &sqlgraph.UpdateSpec{
+	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   txs.Table,
 			Columns: txs.Columns,
@@ -138,38 +166,51 @@ func (tu *TxsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		},
 	}
 	if ps := tu.predicates; len(ps) > 0 {
-		spec.Predicate = func(selector *sql.Selector) {
+		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
 	if value := tu.tx_type; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  *value,
 			Column: txs.FieldTxType,
 		})
 	}
 	if value := tu.created_at; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  *value,
 			Column: txs.FieldCreatedAt,
 		})
 	}
 	if value := tu.amount; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: txs.FieldAmount,
 		})
 	}
 	if value := tu.addamount; value != nil {
-		spec.Fields.Add = append(spec.Fields.Add, &sqlgraph.FieldSpec{
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: txs.FieldAmount,
+		})
+	}
+	if value := tu.reference_number; value != nil {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  *value,
+			Column: txs.FieldReferenceNumber,
+		})
+	}
+	if tu.clearreference_number {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: txs.FieldReferenceNumber,
 		})
 	}
 	if tu.clearedAccounts {
@@ -186,7 +227,7 @@ func (tu *TxsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				},
 			},
 		}
-		spec.Edges.Clear = append(spec.Edges.Clear, edge)
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := tu.accounts; len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -205,9 +246,9 @@ func (tu *TxsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		for k, _ := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		spec.Edges.Add = append(spec.Edges.Add, edge)
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, spec); err != nil {
+	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
 		}
@@ -219,13 +260,15 @@ func (tu *TxsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // TxsUpdateOne is the builder for updating a single Txs entity.
 type TxsUpdateOne struct {
 	config
-	id              int
-	tx_type         *string
-	created_at      *time.Time
-	amount          *int64
-	addamount       *int64
-	accounts        map[int]struct{}
-	clearedAccounts bool
+	id                    int
+	tx_type               *string
+	created_at            *time.Time
+	amount                *int64
+	addamount             *int64
+	reference_number      *string
+	clearreference_number bool
+	accounts              map[int]struct{}
+	clearedAccounts       bool
 }
 
 // SetTxType sets the tx_type field.
@@ -254,6 +297,27 @@ func (tuo *TxsUpdateOne) AddAmount(i int64) *TxsUpdateOne {
 	} else {
 		*tuo.addamount += i
 	}
+	return tuo
+}
+
+// SetReferenceNumber sets the reference_number field.
+func (tuo *TxsUpdateOne) SetReferenceNumber(s string) *TxsUpdateOne {
+	tuo.reference_number = &s
+	return tuo
+}
+
+// SetNillableReferenceNumber sets the reference_number field if the given value is not nil.
+func (tuo *TxsUpdateOne) SetNillableReferenceNumber(s *string) *TxsUpdateOne {
+	if s != nil {
+		tuo.SetReferenceNumber(*s)
+	}
+	return tuo
+}
+
+// ClearReferenceNumber clears the value of reference_number.
+func (tuo *TxsUpdateOne) ClearReferenceNumber() *TxsUpdateOne {
+	tuo.reference_number = nil
+	tuo.clearreference_number = true
 	return tuo
 }
 
@@ -292,6 +356,11 @@ func (tuo *TxsUpdateOne) Save(ctx context.Context) (*Txs, error) {
 			return nil, fmt.Errorf("ent: validator failed for field \"tx_type\": %v", err)
 		}
 	}
+	if tuo.reference_number != nil {
+		if err := txs.ReferenceNumberValidator(*tuo.reference_number); err != nil {
+			return nil, fmt.Errorf("ent: validator failed for field \"reference_number\": %v", err)
+		}
+	}
 	if len(tuo.accounts) > 1 {
 		return nil, errors.New("ent: multiple assignments on a unique edge \"accounts\"")
 	}
@@ -321,7 +390,7 @@ func (tuo *TxsUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (tuo *TxsUpdateOne) sqlSave(ctx context.Context) (t *Txs, err error) {
-	spec := &sqlgraph.UpdateSpec{
+	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   txs.Table,
 			Columns: txs.Columns,
@@ -333,31 +402,44 @@ func (tuo *TxsUpdateOne) sqlSave(ctx context.Context) (t *Txs, err error) {
 		},
 	}
 	if value := tuo.tx_type; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  *value,
 			Column: txs.FieldTxType,
 		})
 	}
 	if value := tuo.created_at; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  *value,
 			Column: txs.FieldCreatedAt,
 		})
 	}
 	if value := tuo.amount; value != nil {
-		spec.Fields.Set = append(spec.Fields.Set, &sqlgraph.FieldSpec{
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: txs.FieldAmount,
 		})
 	}
 	if value := tuo.addamount; value != nil {
-		spec.Fields.Add = append(spec.Fields.Add, &sqlgraph.FieldSpec{
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: txs.FieldAmount,
+		})
+	}
+	if value := tuo.reference_number; value != nil {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  *value,
+			Column: txs.FieldReferenceNumber,
+		})
+	}
+	if tuo.clearreference_number {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: txs.FieldReferenceNumber,
 		})
 	}
 	if tuo.clearedAccounts {
@@ -374,7 +456,7 @@ func (tuo *TxsUpdateOne) sqlSave(ctx context.Context) (t *Txs, err error) {
 				},
 			},
 		}
-		spec.Edges.Clear = append(spec.Edges.Clear, edge)
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := tuo.accounts; len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -393,12 +475,12 @@ func (tuo *TxsUpdateOne) sqlSave(ctx context.Context) (t *Txs, err error) {
 		for k, _ := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		spec.Edges.Add = append(spec.Edges.Add, edge)
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	t = &Txs{config: tuo.config}
-	spec.Assign = t.assignValues
-	spec.ScanValues = t.scanValues()
-	if err = sqlgraph.UpdateNode(ctx, tuo.driver, spec); err != nil {
+	_spec.Assign = t.assignValues
+	_spec.ScanValues = t.scanValues()
+	if err = sqlgraph.UpdateNode(ctx, tuo.driver, _spec); err != nil {
 		if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
 		}

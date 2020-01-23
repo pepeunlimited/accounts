@@ -108,8 +108,8 @@ func (ac *AccountsCreate) SaveX(ctx context.Context) *Accounts {
 
 func (ac *AccountsCreate) sqlSave(ctx context.Context) (*Accounts, error) {
 	var (
-		a    = &Accounts{config: ac.config}
-		spec = &sqlgraph.CreateSpec{
+		a     = &Accounts{config: ac.config}
+		_spec = &sqlgraph.CreateSpec{
 			Table: accounts.Table,
 			ID: &sqlgraph.FieldSpec{
 				Type:   field.TypeInt,
@@ -118,7 +118,7 @@ func (ac *AccountsCreate) sqlSave(ctx context.Context) (*Accounts, error) {
 		}
 	)
 	if value := ac.balance; value != nil {
-		spec.Fields = append(spec.Fields, &sqlgraph.FieldSpec{
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: accounts.FieldBalance,
@@ -126,7 +126,7 @@ func (ac *AccountsCreate) sqlSave(ctx context.Context) (*Accounts, error) {
 		a.Balance = *value
 	}
 	if value := ac.version; value != nil {
-		spec.Fields = append(spec.Fields, &sqlgraph.FieldSpec{
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeUint8,
 			Value:  *value,
 			Column: accounts.FieldVersion,
@@ -134,7 +134,7 @@ func (ac *AccountsCreate) sqlSave(ctx context.Context) (*Accounts, error) {
 		a.Version = *value
 	}
 	if value := ac._type; value != nil {
-		spec.Fields = append(spec.Fields, &sqlgraph.FieldSpec{
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  *value,
 			Column: accounts.FieldType,
@@ -142,7 +142,7 @@ func (ac *AccountsCreate) sqlSave(ctx context.Context) (*Accounts, error) {
 		a.Type = *value
 	}
 	if value := ac.is_withdrawable; value != nil {
-		spec.Fields = append(spec.Fields, &sqlgraph.FieldSpec{
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
 			Value:  *value,
 			Column: accounts.FieldIsWithdrawable,
@@ -150,7 +150,7 @@ func (ac *AccountsCreate) sqlSave(ctx context.Context) (*Accounts, error) {
 		a.IsWithdrawable = *value
 	}
 	if value := ac.user_id; value != nil {
-		spec.Fields = append(spec.Fields, &sqlgraph.FieldSpec{
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: accounts.FieldUserID,
@@ -174,15 +174,15 @@ func (ac *AccountsCreate) sqlSave(ctx context.Context) (*Accounts, error) {
 		for k, _ := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		spec.Edges = append(spec.Edges, edge)
+		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if err := sqlgraph.CreateNode(ctx, ac.driver, spec); err != nil {
+	if err := sqlgraph.CreateNode(ctx, ac.driver, _spec); err != nil {
 		if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
 		}
 		return nil, err
 	}
-	id := spec.ID.Value.(int64)
+	id := _spec.ID.Value.(int64)
 	a.ID = int(id)
 	return a, nil
 }

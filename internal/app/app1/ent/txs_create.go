@@ -17,10 +17,11 @@ import (
 // TxsCreate is the builder for creating a Txs entity.
 type TxsCreate struct {
 	config
-	tx_type    *string
-	created_at *time.Time
-	amount     *int64
-	accounts   map[int]struct{}
+	tx_type          *string
+	created_at       *time.Time
+	amount           *int64
+	reference_number *string
+	accounts         map[int]struct{}
 }
 
 // SetTxType sets the tx_type field.
@@ -38,6 +39,20 @@ func (tc *TxsCreate) SetCreatedAt(t time.Time) *TxsCreate {
 // SetAmount sets the amount field.
 func (tc *TxsCreate) SetAmount(i int64) *TxsCreate {
 	tc.amount = &i
+	return tc
+}
+
+// SetReferenceNumber sets the reference_number field.
+func (tc *TxsCreate) SetReferenceNumber(s string) *TxsCreate {
+	tc.reference_number = &s
+	return tc
+}
+
+// SetNillableReferenceNumber sets the reference_number field if the given value is not nil.
+func (tc *TxsCreate) SetNillableReferenceNumber(s *string) *TxsCreate {
+	if s != nil {
+		tc.SetReferenceNumber(*s)
+	}
 	return tc
 }
 
@@ -77,6 +92,11 @@ func (tc *TxsCreate) Save(ctx context.Context) (*Txs, error) {
 	if tc.amount == nil {
 		return nil, errors.New("ent: missing required field \"amount\"")
 	}
+	if tc.reference_number != nil {
+		if err := txs.ReferenceNumberValidator(*tc.reference_number); err != nil {
+			return nil, fmt.Errorf("ent: validator failed for field \"reference_number\": %v", err)
+		}
+	}
 	if len(tc.accounts) > 1 {
 		return nil, errors.New("ent: multiple assignments on a unique edge \"accounts\"")
 	}
@@ -94,8 +114,8 @@ func (tc *TxsCreate) SaveX(ctx context.Context) *Txs {
 
 func (tc *TxsCreate) sqlSave(ctx context.Context) (*Txs, error) {
 	var (
-		t    = &Txs{config: tc.config}
-		spec = &sqlgraph.CreateSpec{
+		t     = &Txs{config: tc.config}
+		_spec = &sqlgraph.CreateSpec{
 			Table: txs.Table,
 			ID: &sqlgraph.FieldSpec{
 				Type:   field.TypeInt,
@@ -104,7 +124,7 @@ func (tc *TxsCreate) sqlSave(ctx context.Context) (*Txs, error) {
 		}
 	)
 	if value := tc.tx_type; value != nil {
-		spec.Fields = append(spec.Fields, &sqlgraph.FieldSpec{
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  *value,
 			Column: txs.FieldTxType,
@@ -112,7 +132,7 @@ func (tc *TxsCreate) sqlSave(ctx context.Context) (*Txs, error) {
 		t.TxType = *value
 	}
 	if value := tc.created_at; value != nil {
-		spec.Fields = append(spec.Fields, &sqlgraph.FieldSpec{
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  *value,
 			Column: txs.FieldCreatedAt,
@@ -120,12 +140,20 @@ func (tc *TxsCreate) sqlSave(ctx context.Context) (*Txs, error) {
 		t.CreatedAt = *value
 	}
 	if value := tc.amount; value != nil {
-		spec.Fields = append(spec.Fields, &sqlgraph.FieldSpec{
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
 			Column: txs.FieldAmount,
 		})
 		t.Amount = *value
+	}
+	if value := tc.reference_number; value != nil {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  *value,
+			Column: txs.FieldReferenceNumber,
+		})
+		t.ReferenceNumber = value
 	}
 	if nodes := tc.accounts; len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -144,15 +172,15 @@ func (tc *TxsCreate) sqlSave(ctx context.Context) (*Txs, error) {
 		for k, _ := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		spec.Edges = append(spec.Edges, edge)
+		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if err := sqlgraph.CreateNode(ctx, tc.driver, spec); err != nil {
+	if err := sqlgraph.CreateNode(ctx, tc.driver, _spec); err != nil {
 		if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
 		}
 		return nil, err
 	}
-	id := spec.ID.Value.(int64)
+	id := _spec.ID.Value.(int64)
 	t.ID = int(id)
 	return t, nil
 }

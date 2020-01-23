@@ -13,22 +13,36 @@ func TestAccountsMySQL_Create(t *testing.T) {
 	accounts := NewAccountsRepository(client)
 	accounts.DeleteAll(ctx)
 	userId := int64(1)
-	account, err := accounts.CreateCoinAccount(ctx, userId)
+	coin, err := accounts.CreateCoinAccount(ctx, userId)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-
-	if account.Balance != 0 {
+	if coin.Balance != 0 {
 		t.FailNow()
 	}
-	//_, err = accounts.Create(ctx, "name2", userId)
-	//if err == nil {
-	//	t.FailNow()
-	//}
-	//if err != ErrUserAccountExist {
-	//	t.FailNow()
-	//}
+	cash, err := accounts.CreateCashAccount(ctx, userId)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if cash.Balance != 0 {
+		t.FailNow()
+	}
+	_, err = accounts.CreateCoinAccount(ctx, userId)
+	if err == nil {
+		t.FailNow()
+	}
+	if err != ErrUserAccountExist {
+		t.FailNow()
+	}
+	_, err = accounts.CreateCashAccount(ctx, userId)
+	if err == nil {
+		t.FailNow()
+	}
+	if err != ErrUserAccountExist {
+		t.FailNow()
+	}
 }
 
 func TestAccountsMySQL_Transfer(t *testing.T) {
@@ -56,8 +70,8 @@ func TestAccountsMySQL_Transfer(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	tx, err := accounts.Transfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount)
-
+	referenceNumber := "referenceNumber001"
+	tx, err := accounts.Transfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount, &referenceNumber)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -65,7 +79,46 @@ func TestAccountsMySQL_Transfer(t *testing.T) {
 	tx.Commit()
 }
 
+func TestAccountsMySQL_TransferReferenceNumberExist(t *testing.T) {
+	ctx := context.TODO()
+	client := mysql.NewEntClient()
+	accounts := NewAccountsRepository(client)
+	accounts.DeleteAll(ctx)
 
+	fromUserId := int64(1)
+	fromAmount := int64(50)
+
+	toUserId := int64(2)
+	toAmount := int64(40)
+
+	fromAccount, err := accounts.CreateCoinAccount(ctx, fromUserId)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	accounts.DoDeposit(ctx, int64(200), fromAccount.ID, fromUserId)
+	toAccount, err := accounts.CreateCashAccount(ctx, toUserId)
+
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	referenceNumber := "referenceNumber001"
+	tx, err := accounts.Transfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount, &referenceNumber)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	tx.Commit()
+	tx, err = accounts.Transfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount, &referenceNumber)
+	if err == nil {
+		t.FailNow()
+	}
+	if err != ErrReferenceNumberExist {
+		t.FailNow()
+	}
+}
 
 func TestAccountsMySQL_TransferLowBalance(t *testing.T) {
 	ctx := context.TODO()
@@ -94,7 +147,7 @@ func TestAccountsMySQL_TransferLowBalance(t *testing.T) {
 		t.FailNow()
 	}
 
-	tx, err := accounts.Transfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount)
+	tx, err := accounts.Transfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount, nil)
 	if err == nil {
 		t.FailNow()
 	}
@@ -130,7 +183,7 @@ func TestAccountsMySQL_DoTransfer(t *testing.T) {
 		t.FailNow()
 	}
 	for i := 0; i < 250; i++ {
-		tx, err := accounts.Transfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount)
+		tx, err := accounts.Transfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount, nil)
 		if err != nil {
 			t.Error(err)
 			t.FailNow()
@@ -163,7 +216,7 @@ func TestAccountsMySQL_DoTransferOCC(t *testing.T) {
 		t.FailNow()
 	}
 	for i := 0; i < 100; i++ {
-		go accounts.DoTransfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount)
+		go accounts.DoTransfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount, nil)
 	}
 	time.Sleep(3 * time.Second)
 }

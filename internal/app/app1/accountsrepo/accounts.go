@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	mysql2 "github.com/go-sql-driver/mysql"
 	"github.com/pepeunlimited/accounts/internal/app/app1/ent"
 	"github.com/pepeunlimited/accounts/internal/app/app1/ent/accounts"
 	"github.com/pepeunlimited/microservice-kit/misc"
@@ -14,7 +15,7 @@ import (
 
 const (
 	updateBalanceSQL 	= "UPDATE accounts SET balance = ?, version = ? WHERE id = ? AND version = ?"
-	createTXsSQL 		= "INSERT INTO txs (tx_type, created_at, amount, accounts_id) VALUES (?, ?, ?, ?)"
+	createTXsSQL 		= "INSERT INTO txs (tx_type, created_at, amount, accounts_id, reference_number) VALUES (?, ?, ?, ?, ?)"
 )
 
 var (
@@ -23,6 +24,7 @@ var (
 	ErrLowAccountBalance    	= errors.New("accounts: unable to process payment; low account balance")
 	ErrOptimisticConcurrency 	= errors.New("accounts: unable to process payment; optimistic concurrency exception")
 	ErrInvalidAmount 			= errors.New("accounts: invalid amount")
+	ErrReferenceNumberExist 	= errors.New("accounts: reference number exist")
 )
 
 type AccountsRepository interface {
@@ -36,11 +38,11 @@ type AccountsRepository interface {
 
 	Deposit(ctx context.Context, amount int64, toAccountID int, toUserID int64) 										(*sql.Tx, error)
 	Withdraw(ctx context.Context, withdrawAmount int64, fromCashAccountID int, fromUserID int64) 						(*sql.Tx, error)
-	Transfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64) (*sql.Tx, error)
+	Transfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64, referenceNumber *string) (*sql.Tx, error)
 
 	DoWithdraw(ctx context.Context, withdrawAmount int64, fromCashAccountID int, fromUserID int64) 						error
 	DoDeposit(ctx context.Context, amount int64, toAccountID int, toUserID int64) error
-	DoTransfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64) error
+	DoTransfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64, referenceNumber *string) error
 	DeleteAll(ctx context.Context)
 }
 
@@ -60,9 +62,9 @@ func (mysql accountsMySQL) DoWithdraw(ctx context.Context, withdrawAmount int64,
 	return deposit.Commit()
 }
 
-func (mysql accountsMySQL) DoTransfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64) error {
+func (mysql accountsMySQL) DoTransfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64, referenceNumber *string) error {
 
-	transfer, err := mysql.Transfer(ctx, fromAmount, fromAccountID, fromUserID, toCashAccountID, toUserID, toAmount)
+	transfer, err := mysql.Transfer(ctx, fromAmount, fromAccountID, fromUserID, toCashAccountID, toUserID, toAmount, referenceNumber)
 	if err != nil {
 		if transfer != nil {
 			transfer.Rollback()
@@ -104,7 +106,7 @@ func (mysql accountsMySQL) Deposit(ctx context.Context, amount int64, toAccountI
 	}
 
 	//write tx history
-	if err = mysql.createTX(ctx, toAccountID, amount, Deposit, tx); err != nil {
+	if err = mysql.createTX(ctx, toAccountID, amount, Deposit, tx, nil); err != nil {
 		if tx != nil {
 			tx.Rollback()
 		}
@@ -135,7 +137,7 @@ func (mysql accountsMySQL) Withdraw(ctx context.Context, withdrawAmount int64, f
 	}
 
 	//write tx history
-	if err = mysql.createTX(ctx, fromCashAccountID, withdrawAmount, Withdraw, tx); err != nil {
+	if err = mysql.createTX(ctx, fromCashAccountID, withdrawAmount, Withdraw, tx, nil); err != nil {
 		if tx != nil {
 			tx.Rollback()
 		}
@@ -145,7 +147,7 @@ func (mysql accountsMySQL) Withdraw(ctx context.Context, withdrawAmount int64, f
 	return tx, nil
 }
 
-func (mysql accountsMySQL) Transfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64) (*sql.Tx, error) {
+func (mysql accountsMySQL) Transfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64, referenceNumber *string) (*sql.Tx, error) {
 	if fromAmount > 0 {
 		return nil, ErrInvalidAmount
 	}
@@ -174,7 +176,7 @@ func (mysql accountsMySQL) Transfer(ctx context.Context, fromAmount int64, fromA
 	}
 
 	//write tx history
-	if err = mysql.createTX(ctx, fromAccountID, fromAmount, Charge, tx); err != nil {
+	if err = mysql.createTX(ctx, fromAccountID, fromAmount, Charge, tx, nil); err != nil {
 		if tx != nil {
 			tx.Rollback()
 		}
@@ -189,7 +191,7 @@ func (mysql accountsMySQL) Transfer(ctx context.Context, fromAmount int64, fromA
 	}
 
 	//write tx history
-	if err = mysql.createTX(ctx, toCashAccountID, toAmount, Transfer, tx); err != nil {
+	if err = mysql.createTX(ctx, toCashAccountID, toAmount, Transfer, tx, referenceNumber); err != nil {
 		if tx != nil {
 			tx.Rollback()
 		}
@@ -305,10 +307,18 @@ func isDebug() bool {
 	return isDebug
 }
 
-func (mysql accountsMySQL) createTX(ctx context.Context, accountID int, amount int64, types TxType, tx *sql.Tx) error {
-	result, err := tx.ExecContext(ctx, createTXsSQL, types.String(), time.Now().UTC(), amount, accountID)
+func (mysql accountsMySQL) createTX(ctx context.Context, accountID int, amount int64, types TxType, tx *sql.Tx, referenceNumber *string) error {
+	rn := sql.NullString{Valid: false}
+	if referenceNumber != nil {
+		rn.String = *referenceNumber
+		rn.Valid = true
+	}
+	result, err := tx.ExecContext(ctx, createTXsSQL, types.String(), time.Now().UTC(), amount, accountID, rn)
 	if err != nil {
 		tx.Rollback()
+		if err.(*mysql2.MySQLError).Number == 1062 {
+			return ErrReferenceNumberExist
+		}
 		return err
 	}
 	_, err = result.LastInsertId()

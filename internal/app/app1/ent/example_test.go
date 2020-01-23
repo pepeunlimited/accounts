@@ -33,6 +33,7 @@ func ExampleAccounts() {
 		SetTxType("string").
 		SetCreatedAt(time.Now()).
 		SetAmount(1).
+		SetReferenceNumber("string").
 		SaveX(ctx)
 	log.Println("txs created:", t0)
 
@@ -76,6 +77,7 @@ func ExampleTxs() {
 		SetTxType("string").
 		SetCreatedAt(time.Now()).
 		SetAmount(1).
+		SetReferenceNumber("string").
 		SaveX(ctx)
 	log.Println("txs created:", t)
 

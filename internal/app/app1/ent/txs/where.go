@@ -127,6 +127,14 @@ func Amount(v int64) predicate.Txs {
 	)
 }
 
+// ReferenceNumber applies equality check predicate on the "reference_number" field. It's identical to ReferenceNumberEQ.
+func ReferenceNumber(v string) predicate.Txs {
+	return predicate.Txs(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldReferenceNumber), v))
+	},
+	)
+}
+
 // TxTypeEQ applies the EQ predicate on the "tx_type" field.
 func TxTypeEQ(v string) predicate.Txs {
 	return predicate.Txs(func(s *sql.Selector) {
@@ -415,6 +423,146 @@ func AmountLT(v int64) predicate.Txs {
 func AmountLTE(v int64) predicate.Txs {
 	return predicate.Txs(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldAmount), v))
+	},
+	)
+}
+
+// ReferenceNumberEQ applies the EQ predicate on the "reference_number" field.
+func ReferenceNumberEQ(v string) predicate.Txs {
+	return predicate.Txs(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldReferenceNumber), v))
+	},
+	)
+}
+
+// ReferenceNumberNEQ applies the NEQ predicate on the "reference_number" field.
+func ReferenceNumberNEQ(v string) predicate.Txs {
+	return predicate.Txs(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldReferenceNumber), v))
+	},
+	)
+}
+
+// ReferenceNumberIn applies the In predicate on the "reference_number" field.
+func ReferenceNumberIn(vs ...string) predicate.Txs {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Txs(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(vs) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldReferenceNumber), v...))
+	},
+	)
+}
+
+// ReferenceNumberNotIn applies the NotIn predicate on the "reference_number" field.
+func ReferenceNumberNotIn(vs ...string) predicate.Txs {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Txs(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(vs) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldReferenceNumber), v...))
+	},
+	)
+}
+
+// ReferenceNumberGT applies the GT predicate on the "reference_number" field.
+func ReferenceNumberGT(v string) predicate.Txs {
+	return predicate.Txs(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldReferenceNumber), v))
+	},
+	)
+}
+
+// ReferenceNumberGTE applies the GTE predicate on the "reference_number" field.
+func ReferenceNumberGTE(v string) predicate.Txs {
+	return predicate.Txs(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldReferenceNumber), v))
+	},
+	)
+}
+
+// ReferenceNumberLT applies the LT predicate on the "reference_number" field.
+func ReferenceNumberLT(v string) predicate.Txs {
+	return predicate.Txs(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldReferenceNumber), v))
+	},
+	)
+}
+
+// ReferenceNumberLTE applies the LTE predicate on the "reference_number" field.
+func ReferenceNumberLTE(v string) predicate.Txs {
+	return predicate.Txs(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldReferenceNumber), v))
+	},
+	)
+}
+
+// ReferenceNumberContains applies the Contains predicate on the "reference_number" field.
+func ReferenceNumberContains(v string) predicate.Txs {
+	return predicate.Txs(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldReferenceNumber), v))
+	},
+	)
+}
+
+// ReferenceNumberHasPrefix applies the HasPrefix predicate on the "reference_number" field.
+func ReferenceNumberHasPrefix(v string) predicate.Txs {
+	return predicate.Txs(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldReferenceNumber), v))
+	},
+	)
+}
+
+// ReferenceNumberHasSuffix applies the HasSuffix predicate on the "reference_number" field.
+func ReferenceNumberHasSuffix(v string) predicate.Txs {
+	return predicate.Txs(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldReferenceNumber), v))
+	},
+	)
+}
+
+// ReferenceNumberIsNil applies the IsNil predicate on the "reference_number" field.
+func ReferenceNumberIsNil() predicate.Txs {
+	return predicate.Txs(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldReferenceNumber)))
+	},
+	)
+}
+
+// ReferenceNumberNotNil applies the NotNil predicate on the "reference_number" field.
+func ReferenceNumberNotNil() predicate.Txs {
+	return predicate.Txs(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldReferenceNumber)))
+	},
+	)
+}
+
+// ReferenceNumberEqualFold applies the EqualFold predicate on the "reference_number" field.
+func ReferenceNumberEqualFold(v string) predicate.Txs {
+	return predicate.Txs(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldReferenceNumber), v))
+	},
+	)
+}
+
+// ReferenceNumberContainsFold applies the ContainsFold predicate on the "reference_number" field.
+func ReferenceNumberContainsFold(v string) predicate.Txs {
+	return predicate.Txs(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldReferenceNumber), v))
 	},
 	)
 }

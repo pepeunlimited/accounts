@@ -30,6 +30,7 @@ var (
 		{Name: "tx_type", Type: field.TypeString, Size: 10},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "amount", Type: field.TypeInt64},
+		{Name: "reference_number", Type: field.TypeString, Unique: true, Nullable: true, Size: 36},
 		{Name: "accounts_id", Type: field.TypeInt, Nullable: true},
 	}
 	// TxsTable holds the schema information for the "txs" table.
@@ -40,7 +41,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:  "txs_accounts_txs",
-				Columns: []*schema.Column{TxsColumns[4]},
+				Columns: []*schema.Column{TxsColumns[5]},
 
 				RefColumns: []*schema.Column{AccountsColumns[0]},
 				OnDelete:   schema.SetNull,

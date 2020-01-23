@@ -291,23 +291,26 @@ func (aq *AccountsQuery) Select(field string, fields ...string) *AccountsSelect 
 func (aq *AccountsQuery) sqlAll(ctx context.Context) ([]*Accounts, error) {
 	var (
 		nodes []*Accounts
-		spec  = aq.querySpec()
+		_spec = aq.querySpec()
 	)
-	spec.ScanValues = func() []interface{} {
+	_spec.ScanValues = func() []interface{} {
 		node := &Accounts{config: aq.config}
 		nodes = append(nodes, node)
 		values := node.scanValues()
 		return values
 	}
-	spec.Assign = func(values ...interface{}) error {
+	_spec.Assign = func(values ...interface{}) error {
 		if len(nodes) == 0 {
 			return fmt.Errorf("ent: Assign called without calling ScanValues")
 		}
 		node := nodes[len(nodes)-1]
 		return node.assignValues(values...)
 	}
-	if err := sqlgraph.QueryNodes(ctx, aq.driver, spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, aq.driver, _spec); err != nil {
 		return nil, err
+	}
+	if len(nodes) == 0 {
+		return nodes, nil
 	}
 
 	if query := aq.withTxs; query != nil {
@@ -342,8 +345,8 @@ func (aq *AccountsQuery) sqlAll(ctx context.Context) ([]*Accounts, error) {
 }
 
 func (aq *AccountsQuery) sqlCount(ctx context.Context) (int, error) {
-	spec := aq.querySpec()
-	return sqlgraph.CountNodes(ctx, aq.driver, spec)
+	_spec := aq.querySpec()
+	return sqlgraph.CountNodes(ctx, aq.driver, _spec)
 }
 
 func (aq *AccountsQuery) sqlExist(ctx context.Context) (bool, error) {
@@ -355,7 +358,7 @@ func (aq *AccountsQuery) sqlExist(ctx context.Context) (bool, error) {
 }
 
 func (aq *AccountsQuery) querySpec() *sqlgraph.QuerySpec {
-	spec := &sqlgraph.QuerySpec{
+	_spec := &sqlgraph.QuerySpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   accounts.Table,
 			Columns: accounts.Columns,
@@ -368,26 +371,26 @@ func (aq *AccountsQuery) querySpec() *sqlgraph.QuerySpec {
 		Unique: true,
 	}
 	if ps := aq.predicates; len(ps) > 0 {
-		spec.Predicate = func(selector *sql.Selector) {
+		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
 	if limit := aq.limit; limit != nil {
-		spec.Limit = *limit
+		_spec.Limit = *limit
 	}
 	if offset := aq.offset; offset != nil {
-		spec.Offset = *offset
+		_spec.Offset = *offset
 	}
 	if ps := aq.order; len(ps) > 0 {
-		spec.Order = func(selector *sql.Selector) {
+		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	return spec
+	return _spec
 }
 
 func (aq *AccountsQuery) sqlQuery() *sql.Selector {

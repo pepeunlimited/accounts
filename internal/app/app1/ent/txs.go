@@ -22,12 +22,14 @@ type Txs struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Amount holds the value of the "amount" field.
 	Amount int64 `json:"amount,omitempty"`
+	// ReferenceNumber holds the value of the "reference_number" field.
+	ReferenceNumber *string `json:"reference_number,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TxsQuery when eager-loading is set.
 	Edges struct {
 		// Accounts holds the value of the accounts edge.
 		Accounts *Accounts
-	}
+	} `json:"edges"`
 	accounts_id *int
 }
 
@@ -38,6 +40,7 @@ func (*Txs) scanValues() []interface{} {
 		&sql.NullString{}, // tx_type
 		&sql.NullTime{},   // created_at
 		&sql.NullInt64{},  // amount
+		&sql.NullString{}, // reference_number
 	}
 }
 
@@ -75,7 +78,13 @@ func (t *Txs) assignValues(values ...interface{}) error {
 	} else if value.Valid {
 		t.Amount = value.Int64
 	}
-	values = values[3:]
+	if value, ok := values[3].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field reference_number", values[3])
+	} else if value.Valid {
+		t.ReferenceNumber = new(string)
+		*t.ReferenceNumber = value.String
+	}
+	values = values[4:]
 	if len(values) == len(txs.ForeignKeys) {
 		if value, ok := values[0].(*sql.NullInt64); !ok {
 			return fmt.Errorf("unexpected type %T for edge-field accounts_id", value)
@@ -121,6 +130,10 @@ func (t *Txs) String() string {
 	builder.WriteString(t.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", amount=")
 	builder.WriteString(fmt.Sprintf("%v", t.Amount))
+	if v := t.ReferenceNumber; v != nil {
+		builder.WriteString(", reference_number=")
+		builder.WriteString(*v)
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

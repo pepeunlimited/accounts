@@ -3,12 +3,11 @@ package server
 import (
 	"context"
 	"github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/pepeunlimited/accounts/accountsrpc"
 	"github.com/pepeunlimited/accounts/internal/app/app1/accountsrepo"
 	"github.com/pepeunlimited/accounts/internal/app/app1/mysql"
-	"github.com/pepeunlimited/accounts/accountsrpc"
 	"github.com/pepeunlimited/microservice-kit/rpcz"
 	"github.com/twitchtv/twirp"
-	"log"
 	"testing"
 )
 
@@ -238,15 +237,19 @@ func TestAccountServer_CreateTransfer(t *testing.T) {
 	})
 
 	transfer, err := server.CreateTransfer(ctx, &accountsrpc.CreateTransferParams{
-		FromUserId: fromUserID,
-		FromAmount: -200,
-		ToUserId:   toUserID,
-		ToAmount:   100,
+		FromUserId:      fromUserID,
+		FromAmount:      -200,
+		ToUserId:        toUserID,
+		ToAmount:        100,
+		ReferenceNumber: &wrappers.StringValue{
+			Value: "reference-number",
+		},
 	})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-
-	log.Print(transfer)
+	if transfer == nil {
+		t.FailNow()
+	}
 }

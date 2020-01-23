@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/pepeunlimited/accounts/internal/app/app1/accountsrepo"
 	"github.com/pepeunlimited/accounts/internal/app/app1/ent"
 	"github.com/pepeunlimited/accounts/internal/app/app1/validator"
@@ -98,7 +99,8 @@ func (server AccountServer) CreateTransfer(ctx context.Context, params *accounts
 	if err != nil {
 		return nil, server.isAccountError(err)
 	}
-	transfer, err := server.accounts.Transfer(ctx, params.FromAmount, fromAccount.ID, params.FromUserId, toAccount.ID, params.ToUserId, params.ToAmount)
+	referenceNumber := server.referenceNumber(params.ReferenceNumber)
+	transfer, err := server.accounts.Transfer(ctx, params.FromAmount, fromAccount.ID, params.FromUserId, toAccount.ID, params.ToUserId, params.ToAmount, referenceNumber)
 	if err != nil {
 		if transfer != nil {
 			err := transfer.Rollback()
@@ -126,6 +128,13 @@ func (server AccountServer) CreateTransfer(ctx context.Context, params *accounts
 		From: toAccountRPC(from),
 		To:   toAccountRPC(to),
 	}, nil
+}
+
+func (server AccountServer) referenceNumber(referenceNumber *wrappers.StringValue) *string {
+	if referenceNumber == nil {
+		return nil
+	}
+	return  &referenceNumber.Value
 }
 
 func (server AccountServer) CreateAccount(ctx context.Context, params *accountsrpc.CreateAccountParams) (*accountsrpc.Account, error) {

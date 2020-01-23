@@ -16,10 +16,11 @@ func (Txs) Config() ent.Config {
 }
 
 func (Txs) Fields() []ent.Field {
-	return []ent.Field{
+	return []ent.Field {
 		field.String("tx_type").MaxLen(10).NotEmpty(),
 		field.Time("created_at"),
 		field.Int64("amount"),
+		field.String("reference_number").Unique().Optional().Nillable().MaxLen(36),
 	}
 }
 

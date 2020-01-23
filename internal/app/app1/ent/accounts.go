@@ -30,7 +30,7 @@ type Accounts struct {
 	Edges struct {
 		// Txs holds the value of the txs edge.
 		Txs []*Txs
-	}
+	} `json:"edges"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
