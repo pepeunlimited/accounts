@@ -36,7 +36,7 @@ func (a *AccountsMock) CreateTransfer(ctx context.Context, params *CreateTransfe
 	if a.Errors.IsEmpty() {
 		a.ReferenceNumber = params.ReferenceNumber
 		a.Coin.UserId = params.FromUserId
-		a.Coin.Balance -= params.FromAmount
+		a.Coin.Balance += params.FromAmount
 
 		a.Cash.Balance += params.ToAmount
 		a.Cash.UserId = params.ToUserId
