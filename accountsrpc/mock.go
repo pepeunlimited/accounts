@@ -66,7 +66,7 @@ func NewAccountsMock(errors []error, coin *Account, cash *Account) *AccountsMock
 		mock.Coin = mock.account("COIN", 1)
 	}
 	if cash == nil {
-		mock.Coin = mock.account("CASH", 2)
+		mock.Cash = mock.account("CASH", 2)
 	}
 	return mock
 }
