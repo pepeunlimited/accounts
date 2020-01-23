@@ -2,6 +2,7 @@ package accountsrpc
 
 import (
 	"context"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/pepeunlimited/microservice-kit/errorz"
 	"strings"
 )
@@ -10,6 +11,7 @@ type AccountsMock struct {
 	Errors 			errorz.Stack
 	Coin     		*Account
 	Cash     		*Account
+	ReferenceNumber *wrappers.StringValue
 }
 
 func (a *AccountsMock) CreateDeposit(ctx context.Context, params *CreateDepositParams) (*Account, error) {
@@ -30,8 +32,18 @@ func (a *AccountsMock) CreateWithdraw(context.Context, *CreateWithdrawParams) (*
 	panic("implement me")
 }
 
-func (a *AccountsMock) CreateTransfer(context.Context, *CreateTransferParams) (*CreateTransferResponse, error) {
-	panic("implement me")
+func (a *AccountsMock) CreateTransfer(ctx context.Context, params *CreateTransferParams) (*CreateTransferResponse, error) {
+	if a.Errors.IsEmpty() {
+		a.ReferenceNumber = params.ReferenceNumber
+		a.Coin.UserId = params.FromUserId
+		a.Coin.Balance -= params.FromAmount
+
+		a.Cash.Balance += params.ToAmount
+		a.Cash.UserId = params.ToUserId
+
+		return &CreateTransferResponse{From:a.Coin,To:a.Cash}, nil
+	}
+	return nil, a.Errors.Pop()
 }
 
 func (a *AccountsMock) CreateAccount(context.Context, *CreateAccountParams) (*Account, error) {
