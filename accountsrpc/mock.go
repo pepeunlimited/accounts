@@ -14,6 +14,13 @@ type AccountsMock struct {
 	IsVerified		bool
 }
 
+func (a *AccountsMock) UpdateAccountVerified(context.Context, *UpdateAccountVerifiedParams) (*Account, error) {
+	if a.Errors.IsEmpty() {
+		a.IsVerified = true
+	}
+	return nil, a.Errors.Pop()
+}
+
 func (a *AccountsMock) CreateDeposit(ctx context.Context, params *CreateDepositParams) (*Account, error) {
 	a.ReferenceNumber = params.ReferenceNumber
 	if a.Errors.IsEmpty() {
@@ -40,6 +47,8 @@ func (a *AccountsMock) CreateAccount(context.Context, *CreateAccountParams) (*Ac
 func (a *AccountsMock) GetAccount(context.Context, *GetAccountParams) (*Account, error) {
 	panic("implement me")
 }
+
+
 
 func NewAccountsMock(errors []error, account *Account) *AccountsMock {
 	mock := &AccountsMock{
