@@ -42,8 +42,7 @@ func ExampleAccounts() {
 		Create().
 		SetBalance(1).
 		SetVersion(1).
-		SetType("string").
-		SetIsWithdrawable(true).
+		SetIsVerified(true).
 		SetUserID(1).
 		AddTxs(t0).
 		SaveX(ctx)

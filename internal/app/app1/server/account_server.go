@@ -3,10 +3,10 @@ package server
 import (
 	"context"
 	"github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/pepeunlimited/accounts/accountsrpc"
 	"github.com/pepeunlimited/accounts/internal/app/app1/accountsrepo"
 	"github.com/pepeunlimited/accounts/internal/app/app1/ent"
 	"github.com/pepeunlimited/accounts/internal/app/app1/validator"
-	"github.com/pepeunlimited/accounts/accountsrpc"
 	"github.com/pepeunlimited/microservice-kit/rpcz"
 	"github.com/twitchtv/twirp"
 	"log"
@@ -17,16 +17,28 @@ type AccountServer struct {
 	validator validator.AccountServerValidator
 }
 
-func (server AccountServer) CreateDeposit(ctx context.Context, params *accountsrpc.CreateDepositParams) (*accountsrpc.Account, error) {
-	accountType, err := server.validator.CreateDeposit(params)
+func (server AccountServer) UpdateAccountVerified(ctx context.Context, params *accountsrpc.UpdateAccountVerifiedParams) (*accountsrpc.Account, error) {
+	err := server.validator.UpdateAccountVerified(params)
 	if err != nil {
 		return nil, err
 	}
-	account, err := server.accounts.GetAccountByUserIDAndType(ctx, params.UserId, *accountType)
+	verified, err := server.accounts.UpdateAccountVerified(ctx, params.UserId)
 	if err != nil {
 		return nil, server.isAccountError(err)
 	}
-	tx, err := server.accounts.Deposit(ctx, params.Amount, account.ID, params.UserId)
+	return toAccountRPC(verified), nil
+}
+
+func (server AccountServer) CreateDeposit(ctx context.Context, params *accountsrpc.CreateDepositParams) (*accountsrpc.Account, error) {
+	err := server.validator.CreateDeposit(params)
+	if err != nil {
+		return nil, err
+	}
+	account, err := server.accounts.GetAccountByUserID(ctx, params.UserId)
+	if err != nil {
+		return nil, server.isAccountError(err)
+	}
+	tx, err := server.accounts.Deposit(ctx, params.Amount, account.ID, params.UserId, server.referenceNumber(params.ReferenceNumber))
 	if err != nil {
 		return nil, server.isAccountError(err)
 	}
@@ -35,7 +47,7 @@ func (server AccountServer) CreateDeposit(ctx context.Context, params *accountsr
 		log.Print("accounts-service: deposit commit failure: "+err.Error())
 		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsCommit)
 	}
-	deposited, err := server.accounts.GetAccountByUserIDAndType(ctx, params.UserId, *accountType)
+	deposited, err := server.accounts.GetAccountByUserID(ctx, params.UserId)
 	if err != nil {
 		return nil, server.isAccountError(err)
 	}
@@ -47,15 +59,13 @@ func (server AccountServer) CreateWithdraw(ctx context.Context, params *accounts
 	if err != nil {
 		return nil, err
 	}
-	account, err := server.accounts.GetAccountByUserIDAndType(ctx, params.UserId, accountsrepo.Cash)
+	account, err := server.accounts.GetAccountByUserID(ctx, params.UserId)
 	if err != nil {
 		return nil, server.isAccountError(err)
 	}
-
-	if !account.IsWithdrawable {
-		return nil, twirp.NewError(twirp.Aborted, accountsrpc.WithdrawIsDisabled)
+	if !account.IsVerified {
+		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountIsNotVerified)
 	}
-
 	tx, err := server.accounts.Withdraw(ctx, params.Amount, account.ID, params.UserId)
 	if err != nil {
 		return nil, server.isAccountError(err)
@@ -65,48 +75,11 @@ func (server AccountServer) CreateWithdraw(ctx context.Context, params *accounts
 		log.Print("accounts-service: withdraw commit failure: "+err.Error())
 		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsCommit)
 	}
-	deposited, err := server.accounts.GetAccountByUserIDAndType(ctx, params.UserId, accountsrepo.Cash)
+	withdrawn, err := server.accounts.GetAccountByUserID(ctx, params.UserId)
 	if err != nil {
 		return nil, server.isAccountError(err)
 	}
-	return toAccountRPC(deposited), nil
-}
-
-func (server AccountServer) CreateTransfer(ctx context.Context, params *accountsrpc.CreateTransferParams) (*accountsrpc.CreateTransferResponse, error) {
-	err := server.validator.CreateTransfer(params)
-	if err != nil {
-		return nil, err
-	}
-	fromAccount, err := server.accounts.GetAccountByUserIDAndType(ctx, params.FromUserId, accountsrepo.Coin)
-	if err != nil {
-		return nil, server.isAccountError(err)
-	}
-	toAccount, err := server.accounts.GetAccountByUserIDAndType(ctx, params.ToUserId, accountsrepo.Cash)
-	if err != nil {
-		return nil, server.isAccountError(err)
-	}
-	referenceNumber := server.referenceNumber(params.ReferenceNumber)
-	tx, err := server.accounts.Transfer(ctx, params.FromAmount, fromAccount.ID, params.FromUserId, toAccount.ID, params.ToUserId, params.ToAmount, referenceNumber)
-	if err != nil {
-		return nil, server.isAccountError(err)
-	}
-	err = tx.Commit()
-	if err != nil {
-		log.Print("accounts-service: transfer commit failure: "+err.Error())
-		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsCommit)
-	}
-	from, err := server.accounts.GetAccountByUserIDAndType(ctx, params.FromUserId, accountsrepo.Coin)
-	if err != nil {
-		return nil, server.isAccountError(err)
-	}
-	to, err := server.accounts.GetAccountByUserIDAndType(ctx, params.ToUserId, accountsrepo.Cash)
-	if err != nil {
-		return nil, server.isAccountError(err)
-	}
-	return &accountsrpc.CreateTransferResponse{
-		From: toAccountRPC(from),
-		To:   toAccountRPC(to),
-	}, nil
+	return toAccountRPC(withdrawn), nil
 }
 
 func (server AccountServer) referenceNumber(referenceNumber *wrappers.StringValue) *string {
@@ -117,33 +90,15 @@ func (server AccountServer) referenceNumber(referenceNumber *wrappers.StringValu
 }
 
 func (server AccountServer) CreateAccount(ctx context.Context, params *accountsrpc.CreateAccountParams) (*accountsrpc.Account, error) {
-	ac, err := server.validator.CreateAccount(params)
+	err := server.validator.CreateAccount(params)
 	if err != nil {
 		return nil, err
 	}
-	var account *ent.Accounts
-	switch *ac {
-	case accountsrepo.Coin:
-		account, err = server.accounts.CreateCoinAccount(ctx, params.UserId)
-	case accountsrepo.Cash:
-		account, err = server.accounts.CreateCashAccount(ctx, params.UserId)
-	}
+	account, err := server.accounts.CreateAccount(ctx, params.UserId)
 	if err != nil {
 		return nil, server.isAccountError(err)
 	}
 	return toAccountRPC(account), nil
-}
-
-func (server AccountServer) GetAccounts(ctx context.Context, params *accountsrpc.GetAccountsParams) (*accountsrpc.GetAccountsResponse, error) {
-	ac, err := server.validator.GetAccounts(params)
-	if err != nil {
-		return nil, err
-	}
-	accounts, err := server.accounts.GetAccountsByUserID(ctx, params.UserId, ac)
-	if err != nil {
-		return nil, server.isAccountError(err)
-	}
-	return toAccountsRPC(accounts), nil
 }
 
 func (server AccountServer) GetAccount(ctx context.Context, params *accountsrpc.GetAccountParams) (*accountsrpc.Account, error) {
@@ -151,7 +106,7 @@ func (server AccountServer) GetAccount(ctx context.Context, params *accountsrpc.
 	if err != nil {
 		return nil, err
 	}
-	account, err := server.accounts.GetAccountByUserAndAccountID(ctx, params.UserId, int(params.AccountId))
+	account, err := server.accounts.GetAccountByUserID(ctx, params.UserId)
 	if err != nil {
 		return nil, server.isAccountError(err)
 	}

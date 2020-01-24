@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/facebookincubator/ent/dialect/sql"
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
@@ -17,17 +16,16 @@ import (
 // AccountsUpdate is the builder for updating Accounts entities.
 type AccountsUpdate struct {
 	config
-	balance         *int64
-	addbalance      *int64
-	version         *uint8
-	addversion      *uint8
-	_type           *string
-	is_withdrawable *bool
-	user_id         *int64
-	adduser_id      *int64
-	txs             map[int]struct{}
-	removedTxs      map[int]struct{}
-	predicates      []predicate.Accounts
+	balance     *int64
+	addbalance  *int64
+	version     *uint8
+	addversion  *uint8
+	is_verified *bool
+	user_id     *int64
+	adduser_id  *int64
+	txs         map[int]struct{}
+	removedTxs  map[int]struct{}
+	predicates  []predicate.Accounts
 }
 
 // Where adds a new predicate for the builder.
@@ -70,15 +68,9 @@ func (au *AccountsUpdate) AddVersion(u uint8) *AccountsUpdate {
 	return au
 }
 
-// SetType sets the type field.
-func (au *AccountsUpdate) SetType(s string) *AccountsUpdate {
-	au._type = &s
-	return au
-}
-
-// SetIsWithdrawable sets the is_withdrawable field.
-func (au *AccountsUpdate) SetIsWithdrawable(b bool) *AccountsUpdate {
-	au.is_withdrawable = &b
+// SetIsVerified sets the is_verified field.
+func (au *AccountsUpdate) SetIsVerified(b bool) *AccountsUpdate {
+	au.is_verified = &b
 	return au
 }
 
@@ -141,11 +133,6 @@ func (au *AccountsUpdate) RemoveTxs(t ...*Txs) *AccountsUpdate {
 
 // Save executes the query and returns the number of rows/vertices matched by this operation.
 func (au *AccountsUpdate) Save(ctx context.Context) (int, error) {
-	if au._type != nil {
-		if err := accounts.TypeValidator(*au._type); err != nil {
-			return 0, fmt.Errorf("ent: validator failed for field \"type\": %v", err)
-		}
-	}
 	return au.sqlSave(ctx)
 }
 
@@ -217,18 +204,11 @@ func (au *AccountsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: accounts.FieldVersion,
 		})
 	}
-	if value := au._type; value != nil {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  *value,
-			Column: accounts.FieldType,
-		})
-	}
-	if value := au.is_withdrawable; value != nil {
+	if value := au.is_verified; value != nil {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
 			Value:  *value,
-			Column: accounts.FieldIsWithdrawable,
+			Column: accounts.FieldIsVerified,
 		})
 	}
 	if value := au.user_id; value != nil {
@@ -295,17 +275,16 @@ func (au *AccountsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // AccountsUpdateOne is the builder for updating a single Accounts entity.
 type AccountsUpdateOne struct {
 	config
-	id              int
-	balance         *int64
-	addbalance      *int64
-	version         *uint8
-	addversion      *uint8
-	_type           *string
-	is_withdrawable *bool
-	user_id         *int64
-	adduser_id      *int64
-	txs             map[int]struct{}
-	removedTxs      map[int]struct{}
+	id          int
+	balance     *int64
+	addbalance  *int64
+	version     *uint8
+	addversion  *uint8
+	is_verified *bool
+	user_id     *int64
+	adduser_id  *int64
+	txs         map[int]struct{}
+	removedTxs  map[int]struct{}
 }
 
 // SetBalance sets the balance field.
@@ -342,15 +321,9 @@ func (auo *AccountsUpdateOne) AddVersion(u uint8) *AccountsUpdateOne {
 	return auo
 }
 
-// SetType sets the type field.
-func (auo *AccountsUpdateOne) SetType(s string) *AccountsUpdateOne {
-	auo._type = &s
-	return auo
-}
-
-// SetIsWithdrawable sets the is_withdrawable field.
-func (auo *AccountsUpdateOne) SetIsWithdrawable(b bool) *AccountsUpdateOne {
-	auo.is_withdrawable = &b
+// SetIsVerified sets the is_verified field.
+func (auo *AccountsUpdateOne) SetIsVerified(b bool) *AccountsUpdateOne {
+	auo.is_verified = &b
 	return auo
 }
 
@@ -413,11 +386,6 @@ func (auo *AccountsUpdateOne) RemoveTxs(t ...*Txs) *AccountsUpdateOne {
 
 // Save executes the query and returns the updated entity.
 func (auo *AccountsUpdateOne) Save(ctx context.Context) (*Accounts, error) {
-	if auo._type != nil {
-		if err := accounts.TypeValidator(*auo._type); err != nil {
-			return nil, fmt.Errorf("ent: validator failed for field \"type\": %v", err)
-		}
-	}
 	return auo.sqlSave(ctx)
 }
 
@@ -483,18 +451,11 @@ func (auo *AccountsUpdateOne) sqlSave(ctx context.Context) (a *Accounts, err err
 			Column: accounts.FieldVersion,
 		})
 	}
-	if value := auo._type; value != nil {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  *value,
-			Column: accounts.FieldType,
-		})
-	}
-	if value := auo.is_withdrawable; value != nil {
+	if value := auo.is_verified; value != nil {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
 			Value:  *value,
-			Column: accounts.FieldIsWithdrawable,
+			Column: accounts.FieldIsVerified,
 		})
 	}
 	if value := auo.user_id; value != nil {

@@ -2,10 +2,6 @@
 
 package accounts
 
-import (
-	"github.com/pepeunlimited/accounts/internal/app/app1/ent/schema"
-)
-
 const (
 	// Label holds the string label denoting the accounts type in the database.
 	Label = "accounts"
@@ -15,10 +11,8 @@ const (
 	FieldBalance = "balance"
 	// FieldVersion holds the string denoting the version vertex property in the database.
 	FieldVersion = "version"
-	// FieldType holds the string denoting the type vertex property in the database.
-	FieldType = "type"
-	// FieldIsWithdrawable holds the string denoting the is_withdrawable vertex property in the database.
-	FieldIsWithdrawable = "is_withdrawable"
+	// FieldIsVerified holds the string denoting the is_verified vertex property in the database.
+	FieldIsVerified = "is_verified"
 	// FieldUserID holds the string denoting the user_id vertex property in the database.
 	FieldUserID = "user_id"
 
@@ -38,16 +32,6 @@ var Columns = []string{
 	FieldID,
 	FieldBalance,
 	FieldVersion,
-	FieldType,
-	FieldIsWithdrawable,
+	FieldIsVerified,
 	FieldUserID,
 }
-
-var (
-	fields = schema.Accounts{}.Fields()
-
-	// descType is the schema descriptor for type field.
-	descType = fields[2].Descriptor()
-	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
-	TypeValidator = descType.Validators[0].(func(string) error)
-)

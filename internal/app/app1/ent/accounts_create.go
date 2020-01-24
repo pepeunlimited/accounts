@@ -5,7 +5,6 @@ package ent
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
 	"github.com/facebookincubator/ent/schema/field"
@@ -16,12 +15,11 @@ import (
 // AccountsCreate is the builder for creating a Accounts entity.
 type AccountsCreate struct {
 	config
-	balance         *int64
-	version         *uint8
-	_type           *string
-	is_withdrawable *bool
-	user_id         *int64
-	txs             map[int]struct{}
+	balance     *int64
+	version     *uint8
+	is_verified *bool
+	user_id     *int64
+	txs         map[int]struct{}
 }
 
 // SetBalance sets the balance field.
@@ -36,15 +34,9 @@ func (ac *AccountsCreate) SetVersion(u uint8) *AccountsCreate {
 	return ac
 }
 
-// SetType sets the type field.
-func (ac *AccountsCreate) SetType(s string) *AccountsCreate {
-	ac._type = &s
-	return ac
-}
-
-// SetIsWithdrawable sets the is_withdrawable field.
-func (ac *AccountsCreate) SetIsWithdrawable(b bool) *AccountsCreate {
-	ac.is_withdrawable = &b
+// SetIsVerified sets the is_verified field.
+func (ac *AccountsCreate) SetIsVerified(b bool) *AccountsCreate {
+	ac.is_verified = &b
 	return ac
 }
 
@@ -82,14 +74,8 @@ func (ac *AccountsCreate) Save(ctx context.Context) (*Accounts, error) {
 	if ac.version == nil {
 		return nil, errors.New("ent: missing required field \"version\"")
 	}
-	if ac._type == nil {
-		return nil, errors.New("ent: missing required field \"type\"")
-	}
-	if err := accounts.TypeValidator(*ac._type); err != nil {
-		return nil, fmt.Errorf("ent: validator failed for field \"type\": %v", err)
-	}
-	if ac.is_withdrawable == nil {
-		return nil, errors.New("ent: missing required field \"is_withdrawable\"")
+	if ac.is_verified == nil {
+		return nil, errors.New("ent: missing required field \"is_verified\"")
 	}
 	if ac.user_id == nil {
 		return nil, errors.New("ent: missing required field \"user_id\"")
@@ -133,21 +119,13 @@ func (ac *AccountsCreate) sqlSave(ctx context.Context) (*Accounts, error) {
 		})
 		a.Version = *value
 	}
-	if value := ac._type; value != nil {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  *value,
-			Column: accounts.FieldType,
-		})
-		a.Type = *value
-	}
-	if value := ac.is_withdrawable; value != nil {
+	if value := ac.is_verified; value != nil {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
 			Value:  *value,
-			Column: accounts.FieldIsWithdrawable,
+			Column: accounts.FieldIsVerified,
 		})
-		a.IsWithdrawable = *value
+		a.IsVerified = *value
 	}
 	if value := ac.user_id; value != nil {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

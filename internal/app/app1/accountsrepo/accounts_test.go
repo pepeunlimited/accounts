@@ -13,7 +13,7 @@ func TestAccountsMySQL_Create(t *testing.T) {
 	accounts := NewAccountsRepository(client)
 	accounts.DeleteAll(ctx)
 	userId := int64(1)
-	coin, err := accounts.CreateCoinAccount(ctx, userId)
+	coin, err := accounts.CreateAccount(ctx, userId)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -21,162 +21,13 @@ func TestAccountsMySQL_Create(t *testing.T) {
 	if coin.Balance != 0 {
 		t.FailNow()
 	}
-	cash, err := accounts.CreateCashAccount(ctx, userId)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	if cash.Balance != 0 {
-		t.FailNow()
-	}
-	_, err = accounts.CreateCoinAccount(ctx, userId)
+	_, err = accounts.CreateAccount(ctx, userId)
 	if err == nil {
 		t.FailNow()
 	}
 	if err != ErrUserAccountExist {
 		t.FailNow()
 	}
-	_, err = accounts.CreateCashAccount(ctx, userId)
-	if err == nil {
-		t.FailNow()
-	}
-	if err != ErrUserAccountExist {
-		t.FailNow()
-	}
-}
-
-func TestAccountsMySQL_Transfer(t *testing.T) {
-	ctx := context.TODO()
-	client := mysql.NewEntClient()
-	accounts := NewAccountsRepository(client)
-	accounts.DeleteAll(ctx)
-
-	fromUserId := int64(1)
-	fromAmount := int64(50)
-
-	toUserId := int64(2)
-	toAmount := int64(40)
-
-	fromAccount, err := accounts.CreateCoinAccount(ctx, fromUserId)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	accounts.DoDeposit(ctx, fromAmount, fromAccount.ID, fromUserId)
-	toAccount, err := accounts.CreateCashAccount(ctx, toUserId)
-
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	referenceNumber := "referenceNumber001"
-	tx, err := accounts.Transfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount, &referenceNumber)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	tx.Commit()
-}
-
-func TestAccountsMySQL_TransferLowBalance(t *testing.T) {
-	ctx := context.TODO()
-	client := mysql.NewEntClient()
-	accounts := NewAccountsRepository(client)
-	accounts.DeleteAll(ctx)
-
-	deposit := int64(40)
-	fromUserId := int64(1)
-	fromAmount := int64(50)
-
-	toUserId := int64(2)
-	toAmount := int64(40)
-
-	fromAccount, err := accounts.CreateCoinAccount(ctx, fromUserId)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	accounts.DoDeposit(ctx, deposit, fromAccount.ID, fromUserId)
-	toAccount, err := accounts.CreateCashAccount(ctx, toUserId)
-
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	tx, err := accounts.Transfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount, nil)
-	if err == nil {
-		t.FailNow()
-	}
-	if tx != nil {
-		t.FailNow()
-	}
-	if err != ErrLowAccountBalance {
-		t.FailNow()
-	}
-}
-
-
-func TestAccountsMySQL_DoTransfer(t *testing.T) {
-	ctx := context.TODO()
-	client := mysql.NewEntClient()
-	accounts := NewAccountsRepository(client)
-	accounts.DeleteAll(ctx)
-
-	fromUserId := int64(1)
-	fromAmount := int64(50)
-
-	toUserId := int64(2)
-	toAmount := int64(40)
-	fromAccount, err := accounts.CreateCoinAccount(ctx, fromUserId)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	accounts.DoDeposit(ctx, int64(50000), fromAccount.ID, fromUserId)
-	toAccount, err := accounts.CreateCashAccount(ctx, toUserId)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	for i := 0; i < 250; i++ {
-		tx, err := accounts.Transfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount, nil)
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-		tx.Commit()
-	}
-}
-
-func TestAccountsMySQL_DoTransferOCC(t *testing.T) {
-	ctx := context.TODO()
-	client := mysql.NewEntClient()
-	accounts := NewAccountsRepository(client)
-	accounts.DeleteAll(ctx)
-
-	fromUserId := int64(1)
-	fromAmount := int64(50)
-
-	toUserId := int64(2)
-	toAmount := int64(40)
-	fromAccount, err := accounts.CreateCoinAccount(ctx, fromUserId)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	accounts.DoDeposit(ctx, int64(50000), fromAccount.ID, fromUserId)
-	toAccount, err := accounts.CreateCashAccount(ctx, toUserId)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	for i := 0; i < 500; i++ {
-		go accounts.DoTransfer(ctx, -fromAmount, fromAccount.ID, fromUserId, toAccount.ID, toUserId, toAmount, nil)
-	}
-	time.Sleep(3 * time.Second)
 }
 
 func TestAccountsMySQL_WithdrawOcc(t *testing.T) {
@@ -185,12 +36,12 @@ func TestAccountsMySQL_WithdrawOcc(t *testing.T) {
 	accounts := NewAccountsRepository(client)
 	accounts.DeleteAll(ctx)
 	fromUserId := int64(1)
-	fromAccount, err := accounts.CreateCashAccount(ctx, fromUserId)
+	fromAccount, err := accounts.CreateAccount(ctx, fromUserId)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-	accounts.DoDeposit(ctx, int64(200000), fromAccount.ID, fromUserId)
+	accounts.DoDeposit(ctx, int64(200000), fromAccount.ID, fromUserId, nil)
 	withdrawAmount := int64(100)
 	for i := 0; i < 100; i++ {
 		go accounts.DoWithdraw(ctx, -withdrawAmount, fromAccount.ID, fromUserId)
@@ -206,12 +57,12 @@ func TestAccountsMySQL_Withdraw(t *testing.T) {
 	accounts.DeleteAll(ctx)
 
 	fromUserId := int64(1)
-	fromAccount, err := accounts.CreateCashAccount(ctx, fromUserId)
+	fromAccount, err := accounts.CreateAccount(ctx, fromUserId)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-	accounts.DoDeposit(ctx, int64(200), fromAccount.ID, fromUserId)
+	accounts.DoDeposit(ctx, int64(200), fromAccount.ID, fromUserId, nil)
 	withdrawAmount := int64(100)
 	err = accounts.DoWithdraw(ctx, -withdrawAmount, fromAccount.ID, fromUserId)
 	if err != nil {
@@ -228,19 +79,19 @@ func TestAccountsMySQL_UpdateBalanceLowBalance(t *testing.T) {
 
 
 	userId := int64(1)
-	account, err := accounts.CreateCashAccount(ctx, userId)
+	account, err := accounts.CreateAccount(ctx, userId)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-	tx, err := accounts.Deposit(ctx, 10, account.ID, userId)
+	tx, err := accounts.Deposit(ctx, 10, account.ID, userId, nil)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
 	tx.Commit()
 
-	tx, err = accounts.Deposit(ctx, 10, account.ID, userId)
+	tx, err = accounts.Deposit(ctx, 10, account.ID, userId, nil)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -266,13 +117,13 @@ func TestAccountsMySQL_UpdateBalanceVersionOver255(t *testing.T) {
 	accounts.DeleteAll(ctx)
 
 	userId := int64(1)
-	account, err := accounts.CreateCoinAccount(ctx, userId)
+	account, err := accounts.CreateAccount(ctx, userId)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
 	for i := 0; i < 256; i++ {
-		err := accounts.DoDeposit(ctx, 10,  account.ID, userId)
+		err := accounts.DoDeposit(ctx, 10,  account.ID, userId, nil)
 		if err != nil {
 			t.Error(err)
 			t.FailNow()
@@ -287,13 +138,13 @@ func TestAccountsMySQL_UpdateBalanceVersionOccTest(t *testing.T) {
 	accounts.DeleteAll(ctx)
 
 	userId := int64(1)
-	account, err := accounts.CreateCoinAccount(ctx, userId)
+	account, err := accounts.CreateAccount(ctx, userId)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
 	for i := 0; i < 10; i++ {
-		go accounts.DoDeposit(ctx, 10, account.ID, userId)
+		go accounts.DoDeposit(ctx, 10, account.ID, userId, nil)
 	}
 	time.Sleep(8 * time.Second)
 }
@@ -320,7 +171,7 @@ func TestAccountsMySQL_GetAccountByUserAndAccountID2(t *testing.T) {
 	accounts.DeleteAll(ctx)
 
 	userId := int64(2)
-	created, err := accounts.CreateCoinAccount(ctx, userId)
+	created, err := accounts.CreateAccount(ctx, userId)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()

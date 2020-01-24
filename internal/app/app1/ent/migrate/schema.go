@@ -13,9 +13,8 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "balance", Type: field.TypeInt64},
 		{Name: "version", Type: field.TypeUint8},
-		{Name: "type", Type: field.TypeString, Size: 4},
-		{Name: "is_withdrawable", Type: field.TypeBool},
-		{Name: "user_id", Type: field.TypeInt64},
+		{Name: "is_verified", Type: field.TypeBool},
+		{Name: "user_id", Type: field.TypeInt64, Unique: true},
 	}
 	// AccountsTable holds the schema information for the "accounts" table.
 	AccountsTable = &schema.Table{

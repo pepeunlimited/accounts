@@ -26,27 +26,53 @@ var (
 )
 
 type AccountsRepository interface {
-	CreateCashAccount(ctx context.Context, userId int64) 															(*ent.Accounts, error)
-	CreateCoinAccount(ctx context.Context, userId int64) 															(*ent.Accounts, error)
+	CreateAccount(ctx context.Context, userId int64) (*ent.Accounts, error)
 
-	GetAccountByID(ctx context.Context, accountID int)								 	  							(*ent.Accounts, error)
-	GetAccountsByUserID(ctx context.Context, userID int64, accountType *AccountType) 	 						 	  							([]*ent.Accounts, error)
-	GetAccountByUserAndAccountID(ctx context.Context, userID int64, accountID int) 	  	  							(*ent.Accounts, error)
-	GetAccountByUserIDAndType(ctx context.Context, userID int64, accountType AccountType)							(*ent.Accounts, error)
+	GetAccountByUserID(ctx context.Context, userID int64) (*ent.Accounts, error)
 
-	Deposit(ctx context.Context, amount int64, toAccountID int, toUserID int64) 										(*sql.Tx, error)
-	Withdraw(ctx context.Context, withdrawAmount int64, fromCashAccountID int, fromUserID int64) 						(*sql.Tx, error)
-	Transfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64, referenceNumber *string) (*sql.Tx, error)
+	GetAccountByUserAndAccountID(ctx context.Context, userID int64, accountID int) (*ent.Accounts, error)
 
-	DoWithdraw(ctx context.Context, withdrawAmount int64, fromCashAccountID int, fromUserID int64) 						error
-	DoDeposit(ctx context.Context, amount int64, toAccountID int, toUserID int64) error
-	DoTransfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64, referenceNumber *string) error
+	Deposit(ctx context.Context, amount int64, toAccountID int, toUserID int64, referenceNumber *string) (*sql.Tx, error)
+	Withdraw(ctx context.Context, withdrawAmount int64, fromAccountID int, fromUserID int64) (*sql.Tx, error)
+
+	DoWithdraw(ctx context.Context, withdrawAmount int64, fromAccountID int, fromUserID int64) error
+	DoDeposit(ctx context.Context, amount int64, toAccountID int, toUserID int64, referenceNumber *string) error
+
+	UpdateAccountVerified(ctx context.Context, userID int64) (*ent.Accounts, error)
+
 	DeleteAll(ctx context.Context)
 }
 
 type accountsMySQL struct {
 	client *ent.Client
 	isDebug bool
+}
+
+func (mysql accountsMySQL) UpdateAccountVerified(ctx context.Context, userID int64) (*ent.Accounts, error) {
+	account, err := mysql.GetAccountByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	save, err := account.Update().SetIsVerified(true).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return save, nil
+}
+
+func (mysql accountsMySQL) GetAccountByUserID(ctx context.Context, userID int64) (*ent.Accounts, error) {
+	account, err := mysql.client.Accounts.Query().Where(accounts.UserID(userID)).Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrAccountNotExist
+		}
+		return nil, err
+	}
+	return account, nil
+}
+
+func (mysql accountsMySQL) CreateAccount(ctx context.Context, userId int64) (*ent.Accounts, error) {
+	return mysql.create(ctx, userId)
 }
 
 func (mysql accountsMySQL) DoWithdraw(ctx context.Context, withdrawAmount int64, fromCashAccountID int, fromUserID int64) error {
@@ -57,23 +83,15 @@ func (mysql accountsMySQL) DoWithdraw(ctx context.Context, withdrawAmount int64,
 	return deposit.Commit()
 }
 
-func (mysql accountsMySQL) DoTransfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64, referenceNumber *string) error {
-	transfer, err := mysql.Transfer(ctx, fromAmount, fromAccountID, fromUserID, toCashAccountID, toUserID, toAmount, referenceNumber)
-	if err != nil {
-		return err
-	}
-	return transfer.Commit()
-}
-
-func (mysql accountsMySQL) DoDeposit(ctx context.Context, amount int64, toAccountID int, toUserID int64) error {
-	deposit, err := mysql.Deposit(ctx, amount, toAccountID, toUserID)
+func (mysql accountsMySQL) DoDeposit(ctx context.Context, amount int64, toAccountID int, toUserID int64, referenceNumber *string) error {
+	deposit, err := mysql.Deposit(ctx, amount, toAccountID, toUserID, referenceNumber)
 	if err != nil {
 		return err
 	}
 	return deposit.Commit()
 }
 
-func (mysql accountsMySQL) Deposit(ctx context.Context, amount int64, toAccountID int, toUserID int64) (*sql.Tx, error) {
+func (mysql accountsMySQL) Deposit(ctx context.Context, amount int64, toAccountID int, toUserID int64, referenceNumber *string) (*sql.Tx, error) {
 	if amount < 0 {
 		return nil, ErrInvalidAmount
 	}
@@ -89,17 +107,17 @@ func (mysql accountsMySQL) Deposit(ctx context.Context, amount int64, toAccountI
 		return nil, err
 	}
 	//write tx history
-	if err = mysql.createTX(ctx, toAccountID, amount, Deposit, tx, nil); err != nil {
+	if err = mysql.createTX(ctx, toAccountID, amount, Deposit, tx, referenceNumber); err != nil {
 		return nil, err
 	}
 	return tx, nil
 }
 
-func (mysql accountsMySQL) Withdraw(ctx context.Context, withdrawAmount int64, fromCashAccountID int, fromUserID int64) (*sql.Tx, error) {
+func (mysql accountsMySQL) Withdraw(ctx context.Context, withdrawAmount int64, fromAccountID int, fromUserID int64) (*sql.Tx, error) {
 	if withdrawAmount > 0 {
 		return nil, ErrInvalidAmount
 	}
-	fromAccount, err := mysql.GetAccountByUserIDAndType(ctx, fromUserID, Cash)
+	fromAccount, err := mysql.GetAccountByUserAndAccountID(ctx, fromUserID, fromAccountID)
 	if err != nil {
 		return nil, err
 	}
@@ -107,75 +125,14 @@ func (mysql accountsMySQL) Withdraw(ctx context.Context, withdrawAmount int64, f
 	if err != nil {
 		return nil, err
 	}
-	if err := mysql.updateBalance(ctx, tx, fromUserID, fromCashAccountID, withdrawAmount, fromAccount.Version, fromAccount.Balance); err != nil {
+	if err := mysql.updateBalance(ctx, tx, fromUserID, fromAccountID, withdrawAmount, fromAccount.Version, fromAccount.Balance); err != nil {
 		return nil, err
 	}
 	//write tx history
-	if err = mysql.createTX(ctx, fromCashAccountID, withdrawAmount, Withdraw, tx, nil); err != nil {
+	if err = mysql.createTX(ctx, fromAccountID, withdrawAmount, Withdraw, tx, nil); err != nil {
 		return nil, err
 	}
 	return tx, nil
-}
-
-func (mysql accountsMySQL) Transfer(ctx context.Context, fromAmount int64, fromAccountID int, fromUserID int64, toCashAccountID int, toUserID int64, toAmount int64, referenceNumber *string) (*sql.Tx, error) {
-	if fromAmount > 0 {
-		return nil, ErrInvalidAmount
-	}
-	if toAmount < 0 {
-		return nil, ErrInvalidAmount
-	}
-	fromAccount, err := mysql.GetAccountByUserIDAndType(ctx, fromUserID, Coin)
-	if err != nil {
-		return nil, err
-	}
-	toAccount, err := mysql.GetAccountByUserIDAndType(ctx, toUserID, Cash)
-	if err != nil {
-		return nil, err
-	}
-	tx, err := mysql.client.DB().Begin()
-	if err != nil {
-		return nil, err
-	}
-	if err := mysql.updateBalance(ctx, tx, fromUserID, fromAccountID, fromAmount, fromAccount.Version, fromAccount.Balance); err != nil {
-		return nil, err
-	}
-	//write tx history
-	if err = mysql.createTX(ctx, fromAccountID, fromAmount, Charge, tx, referenceNumber); err != nil {
-		return nil, err
-	}
-	if err := mysql.updateBalance(ctx, tx, toUserID, toCashAccountID, toAmount, toAccount.Version, toAccount.Balance); err != nil {
-		return nil, err
-	}
-	//write tx history
-	if err = mysql.createTX(ctx, toCashAccountID, toAmount, Transfer, tx, referenceNumber); err != nil {
-		return nil, err
-	}
-	return tx, nil
-}
-
-func (mysql accountsMySQL) GetAccountByUserIDAndType(ctx context.Context, userID int64, accountType AccountType) (*ent.Accounts, error) {
-	account, err := mysql.client.Accounts.Query().Where(accounts.And(accounts.UserID(userID), accounts.Type(accountType.String()))).Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, ErrAccountNotExist
-		}
-		return nil, err
-	}
-	return account, nil
-}
-
-func (mysql accountsMySQL) CreateCashAccount(ctx context.Context, userId int64) (*ent.Accounts, error) {
-	if _, err := mysql.GetAccountByUserIDAndType(ctx, userId, Cash); err == nil {
-		return nil, ErrUserAccountExist
-	}
-	return mysql.create(ctx, userId, Cash, true)
-}
-
-func (mysql accountsMySQL) CreateCoinAccount(ctx context.Context, userId int64) (*ent.Accounts, error) {
-	if _, err := mysql.GetAccountByUserIDAndType(ctx, userId, Coin); err == nil {
-		return nil, ErrUserAccountExist
-	}
-	return mysql.create(ctx, userId, Coin, false)
 }
 
 func (mysql accountsMySQL) DeleteAll(ctx context.Context) {
@@ -183,8 +140,8 @@ func (mysql accountsMySQL) DeleteAll(ctx context.Context) {
 	mysql.client.Accounts.Delete().ExecX(ctx)
 }
 
-func (mysql accountsMySQL) create(ctx context.Context, userId int64, accountType AccountType, isWithdrawable bool) (*ent.Accounts, error) {
-	account, err := mysql.client.Accounts.Create().SetBalance(0).SetIsWithdrawable(isWithdrawable).SetType(accountType.String()).SetUserID(userId).SetVersion(0).Save(ctx)
+func (mysql accountsMySQL) create(ctx context.Context, userId int64) (*ent.Accounts, error) {
+	account, err := mysql.client.Accounts.Create().SetBalance(0).SetIsVerified(false).SetUserID(userId).SetVersion(0).Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
 			return nil, ErrUserAccountExist
@@ -192,25 +149,6 @@ func (mysql accountsMySQL) create(ctx context.Context, userId int64, accountType
 		return nil, err
 	}
 	return account, nil
-}
-
-func (mysql accountsMySQL) GetAccountByID(ctx context.Context, accountID int) (*ent.Accounts, error) {
-	panic("implement me")
-}
-
-func (mysql accountsMySQL) GetAccountsByUserID(ctx context.Context, userID int64, accountType *AccountType) ([]*ent.Accounts, error) {
-	if accountType == nil {
-		accounts, err := mysql.client.Accounts.Query().Where(accounts.UserID(userID)).All(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return accounts, nil
-	}
-	account, err := mysql.GetAccountByUserIDAndType(ctx, userID, *accountType)
-	if err != nil {
-		return nil, err
-	}
-	return []*ent.Accounts{account}, nil
 }
 
 func (mysql accountsMySQL) GetAccountByUserAndAccountID(ctx context.Context, userID int64, accountID int) (*ent.Accounts, error) {

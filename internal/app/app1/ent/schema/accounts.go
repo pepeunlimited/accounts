@@ -15,9 +15,8 @@ func (Accounts) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int64("balance"),
 		field.Uint8("version"),
-		field.String("type").MaxLen(4),
-		field.Bool("is_withdrawable"),
-		field.Int64("user_id"),
+		field.Bool("is_verified"),
+		field.Int64("user_id").Unique(),
 	}
 }
 

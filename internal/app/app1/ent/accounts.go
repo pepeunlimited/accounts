@@ -19,10 +19,8 @@ type Accounts struct {
 	Balance int64 `json:"balance,omitempty"`
 	// Version holds the value of the "version" field.
 	Version uint8 `json:"version,omitempty"`
-	// Type holds the value of the "type" field.
-	Type string `json:"type,omitempty"`
-	// IsWithdrawable holds the value of the "is_withdrawable" field.
-	IsWithdrawable bool `json:"is_withdrawable,omitempty"`
+	// IsVerified holds the value of the "is_verified" field.
+	IsVerified bool `json:"is_verified,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID int64 `json:"user_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -36,12 +34,11 @@ type Accounts struct {
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Accounts) scanValues() []interface{} {
 	return []interface{}{
-		&sql.NullInt64{},  // id
-		&sql.NullInt64{},  // balance
-		&sql.NullInt64{},  // version
-		&sql.NullString{}, // type
-		&sql.NullBool{},   // is_withdrawable
-		&sql.NullInt64{},  // user_id
+		&sql.NullInt64{}, // id
+		&sql.NullInt64{}, // balance
+		&sql.NullInt64{}, // version
+		&sql.NullBool{},  // is_verified
+		&sql.NullInt64{}, // user_id
 	}
 }
 
@@ -67,18 +64,13 @@ func (a *Accounts) assignValues(values ...interface{}) error {
 	} else if value.Valid {
 		a.Version = uint8(value.Int64)
 	}
-	if value, ok := values[2].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field type", values[2])
+	if value, ok := values[2].(*sql.NullBool); !ok {
+		return fmt.Errorf("unexpected type %T for field is_verified", values[2])
 	} else if value.Valid {
-		a.Type = value.String
+		a.IsVerified = value.Bool
 	}
-	if value, ok := values[3].(*sql.NullBool); !ok {
-		return fmt.Errorf("unexpected type %T for field is_withdrawable", values[3])
-	} else if value.Valid {
-		a.IsWithdrawable = value.Bool
-	}
-	if value, ok := values[4].(*sql.NullInt64); !ok {
-		return fmt.Errorf("unexpected type %T for field user_id", values[4])
+	if value, ok := values[3].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field user_id", values[3])
 	} else if value.Valid {
 		a.UserID = value.Int64
 	}
@@ -117,10 +109,8 @@ func (a *Accounts) String() string {
 	builder.WriteString(fmt.Sprintf("%v", a.Balance))
 	builder.WriteString(", version=")
 	builder.WriteString(fmt.Sprintf("%v", a.Version))
-	builder.WriteString(", type=")
-	builder.WriteString(a.Type)
-	builder.WriteString(", is_withdrawable=")
-	builder.WriteString(fmt.Sprintf("%v", a.IsWithdrawable))
+	builder.WriteString(", is_verified=")
+	builder.WriteString(fmt.Sprintf("%v", a.IsVerified))
 	builder.WriteString(", user_id=")
 	builder.WriteString(fmt.Sprintf("%v", a.UserID))
 	builder.WriteByte(')')

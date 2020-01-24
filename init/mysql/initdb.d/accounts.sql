@@ -6,9 +6,8 @@ CREATE TABLE accounts (
     id              INT(10) NOT NULL AUTO_INCREMENT,   --
     balance         BIGINT NOT NULL,                   -- int64 -9223372036854775807 - 9223372036854775807
     version         TINYINT UNSIGNED NOT NULL,         -- uin8 0-255 optimistic concurrency control (OCC)
-    user_id         INT(10) NOT NULL,                  --
-    type            CHAR(4) NOT NULL,                  -- CASH, COIN
-    is_withdrawable BOOLEAN NOT NULL,                  -- is possible to withdraw to own bank account
+    user_id         BIGINT UNIQUE NOT NULL,            --
+    is_verified      BOOLEAN NOT NULL,                  -- is possible to withdraw to own bank account
     PRIMARY KEY (id)
 );
 

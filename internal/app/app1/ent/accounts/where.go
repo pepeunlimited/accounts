@@ -117,18 +117,10 @@ func Version(v uint8) predicate.Accounts {
 	)
 }
 
-// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
-func Type(v string) predicate.Accounts {
+// IsVerified applies equality check predicate on the "is_verified" field. It's identical to IsVerifiedEQ.
+func IsVerified(v bool) predicate.Accounts {
 	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldType), v))
-	},
-	)
-}
-
-// IsWithdrawable applies equality check predicate on the "is_withdrawable" field. It's identical to IsWithdrawableEQ.
-func IsWithdrawable(v bool) predicate.Accounts {
-	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldIsWithdrawable), v))
+		s.Where(sql.EQ(s.C(FieldIsVerified), v))
 	},
 	)
 }
@@ -309,142 +301,18 @@ func VersionLTE(v uint8) predicate.Accounts {
 	)
 }
 
-// TypeEQ applies the EQ predicate on the "type" field.
-func TypeEQ(v string) predicate.Accounts {
+// IsVerifiedEQ applies the EQ predicate on the "is_verified" field.
+func IsVerifiedEQ(v bool) predicate.Accounts {
 	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldType), v))
+		s.Where(sql.EQ(s.C(FieldIsVerified), v))
 	},
 	)
 }
 
-// TypeNEQ applies the NEQ predicate on the "type" field.
-func TypeNEQ(v string) predicate.Accounts {
+// IsVerifiedNEQ applies the NEQ predicate on the "is_verified" field.
+func IsVerifiedNEQ(v bool) predicate.Accounts {
 	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldType), v))
-	},
-	)
-}
-
-// TypeIn applies the In predicate on the "type" field.
-func TypeIn(vs ...string) predicate.Accounts {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Accounts(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(vs) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldType), v...))
-	},
-	)
-}
-
-// TypeNotIn applies the NotIn predicate on the "type" field.
-func TypeNotIn(vs ...string) predicate.Accounts {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Accounts(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(vs) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldType), v...))
-	},
-	)
-}
-
-// TypeGT applies the GT predicate on the "type" field.
-func TypeGT(v string) predicate.Accounts {
-	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldType), v))
-	},
-	)
-}
-
-// TypeGTE applies the GTE predicate on the "type" field.
-func TypeGTE(v string) predicate.Accounts {
-	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldType), v))
-	},
-	)
-}
-
-// TypeLT applies the LT predicate on the "type" field.
-func TypeLT(v string) predicate.Accounts {
-	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldType), v))
-	},
-	)
-}
-
-// TypeLTE applies the LTE predicate on the "type" field.
-func TypeLTE(v string) predicate.Accounts {
-	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldType), v))
-	},
-	)
-}
-
-// TypeContains applies the Contains predicate on the "type" field.
-func TypeContains(v string) predicate.Accounts {
-	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldType), v))
-	},
-	)
-}
-
-// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
-func TypeHasPrefix(v string) predicate.Accounts {
-	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldType), v))
-	},
-	)
-}
-
-// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
-func TypeHasSuffix(v string) predicate.Accounts {
-	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldType), v))
-	},
-	)
-}
-
-// TypeEqualFold applies the EqualFold predicate on the "type" field.
-func TypeEqualFold(v string) predicate.Accounts {
-	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldType), v))
-	},
-	)
-}
-
-// TypeContainsFold applies the ContainsFold predicate on the "type" field.
-func TypeContainsFold(v string) predicate.Accounts {
-	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldType), v))
-	},
-	)
-}
-
-// IsWithdrawableEQ applies the EQ predicate on the "is_withdrawable" field.
-func IsWithdrawableEQ(v bool) predicate.Accounts {
-	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldIsWithdrawable), v))
-	},
-	)
-}
-
-// IsWithdrawableNEQ applies the NEQ predicate on the "is_withdrawable" field.
-func IsWithdrawableNEQ(v bool) predicate.Accounts {
-	return predicate.Accounts(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldIsWithdrawable), v))
+		s.Where(sql.NEQ(s.C(FieldIsVerified), v))
 	},
 	)
 }

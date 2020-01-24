@@ -1,76 +1,34 @@
 package validator
 
 import (
-	"github.com/pepeunlimited/accounts/internal/app/app1/accountsrepo"
 	"github.com/pepeunlimited/accounts/accountsrpc"
-	validator2 "github.com/pepeunlimited/microservice-kit/validator"
 	"github.com/twitchtv/twirp"
 )
 
 type AccountServerValidator struct {}
 
-func (v AccountServerValidator) CreateAccount(params *accountsrpc.CreateAccountParams) (*accountsrepo.AccountType, error) {
-	if validator2.IsEmpty(params.AccountType) {
-		return nil, twirp.RequiredArgumentError("account_type")
-	}
-	ac, err := v.accountType(params.AccountType)
-	if err != nil {
-		return nil, err
-	}
-	if params.UserId == 0 {
-		return nil, twirp.RequiredArgumentError("user_id")
-	}
-
-	return ac, nil
-}
-
-func (v AccountServerValidator) GetAccount(params *accountsrpc.GetAccountParams) error {
-	if params.AccountId == 0 {
-		return twirp.RequiredArgumentError("account_id")
-	}
+func (v AccountServerValidator) CreateAccount(params *accountsrpc.CreateAccountParams) error {
 	if params.UserId == 0 {
 		return twirp.RequiredArgumentError("user_id")
 	}
 	return nil
 }
 
-func (v AccountServerValidator) GetAccounts(params *accountsrpc.GetAccountsParams) (*accountsrepo.AccountType, error) {
+func (v AccountServerValidator) GetAccount(params *accountsrpc.GetAccountParams) error {
 	if params.UserId == 0 {
-		return nil, twirp.RequiredArgumentError("user_id")
+		return twirp.RequiredArgumentError("user_id")
 	}
-	if params.AccountType == nil || validator2.IsEmpty(params.AccountType.Value) {
-		return nil, nil
-	}
-	ac, err := v.accountType(params.AccountType.Value)
-	if err != nil {
-		return nil, err
-	}
-	return ac, nil
+	return nil
 }
 
-func (v AccountServerValidator) CreateDeposit(params *accountsrpc.CreateDepositParams) (*accountsrepo.AccountType, error) {
+func (v AccountServerValidator) CreateDeposit(params *accountsrpc.CreateDepositParams) error {
 	if params.Amount < 0 {
-		return nil, twirp.InvalidArgumentError("amount","amount < 0")
+		return twirp.InvalidArgumentError("amount","amount < 0")
 	}
 	if params.UserId == 0 {
-		return nil, twirp.RequiredArgumentError("user_id")
+		return twirp.RequiredArgumentError("user_id")
 	}
-	if params.Amount == 0 {
-		return nil, twirp.RequiredArgumentError("amount")
-	}
-	ac, err := v.accountType(params.AccountType)
-	if err != nil {
-		return nil, err
-	}
-	return ac, nil
-}
-
-func (v AccountServerValidator) accountType(accountType string) (*accountsrepo.AccountType, error) {
-	ac := accountsrepo.AccountTypeFromString(accountType)
-	if ac == accountsrepo.Unknown {
-		return nil, twirp.InvalidArgumentError("account_type", accountType)
-	}
-	return &ac, nil
+	return nil
 }
 
 func (v AccountServerValidator) CreateWithdraw(params *accountsrpc.CreateWithdrawParams) error {
@@ -83,23 +41,9 @@ func (v AccountServerValidator) CreateWithdraw(params *accountsrpc.CreateWithdra
 	return nil
 }
 
-func (v AccountServerValidator) CreateTransfer(params *accountsrpc.CreateTransferParams) error {
-	if params.FromAmount > 0 {
-		return twirp.InvalidArgumentError("from_amount","amount > 0")
-	}
-	if params.FromUserId == 0 {
-		return twirp.RequiredArgumentError("from_user_id")
-	}
-	if params.ToUserId == 0 {
-		return twirp.RequiredArgumentError("to_user_id")
-	}
-	if params.ToAmount < 0 {
-		return twirp.InvalidArgumentError("to_amount","amount < 0")
-	}
-	if params.ReferenceNumber != nil && !validator2.IsEmpty(params.ReferenceNumber.Value) {
-		if len(params.ReferenceNumber.Value) > 36 {
-			return twirp.InvalidArgumentError("reference_number", "max char is 36")
-		}
+func (v AccountServerValidator) UpdateAccountVerified(params *accountsrpc.UpdateAccountVerifiedParams) error {
+	if params.UserId == 0 {
+		return twirp.RequiredArgumentError("user_id")
 	}
 	return nil
 }
@@ -107,4 +51,3 @@ func (v AccountServerValidator) CreateTransfer(params *accountsrpc.CreateTransfe
 func NewAccountServerValidator() AccountServerValidator {
 	return AccountServerValidator{}
 }
-
