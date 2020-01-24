@@ -46,7 +46,7 @@ func (server AccountServer) CreateDeposit(ctx context.Context, params *accountsr
 	err = tx.Commit()
 	if err != nil {
 		log.Print("accounts-service: deposit commit failure: "+err.Error())
-		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsCommit)
+		return nil, twirp.NewError(twirp.Aborted, err.Error()).WithMeta(rpcz.Reason, accountsrpc.AccountTXsCommit)
 	}
 	deposited, err := server.accounts.GetAccountByUserID(ctx, params.UserId)
 	if err != nil {
@@ -65,7 +65,7 @@ func (server AccountServer) CreateWithdraw(ctx context.Context, params *accounts
 		return nil, server.isAccountError(err)
 	}
 	if !account.IsVerified {
-		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountIsNotVerified)
+		return nil, twirp.NewError(twirp.Aborted, "account is not verified").WithMeta(rpcz.Reason, accountsrpc.AccountIsNotVerified)
 	}
 	referenceNumber := uuid.New().String()
 	tx, err := server.accounts.Withdraw(ctx, params.Amount, account.ID, params.UserId, &referenceNumber)
@@ -75,7 +75,7 @@ func (server AccountServer) CreateWithdraw(ctx context.Context, params *accounts
 	err = tx.Commit()
 	if err != nil {
 		log.Print("accounts-service: withdraw commit failure: "+err.Error())
-		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsCommit)
+		return nil, twirp.NewError(twirp.Aborted, err.Error()).WithMeta(rpcz.Reason, accountsrpc.AccountTXsCommit)
 	}
 	withdrawn, err := server.accounts.GetAccountByUserID(ctx, params.UserId)
 	if err != nil {
