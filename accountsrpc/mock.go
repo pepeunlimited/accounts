@@ -33,8 +33,8 @@ func (a *AccountsMock) CreateWithdraw(context.Context, *CreateWithdrawParams) (*
 }
 
 func (a *AccountsMock) CreateTransfer(ctx context.Context, params *CreateTransferParams) (*CreateTransferResponse, error) {
+	a.ReferenceNumber = params.ReferenceNumber
 	if a.Errors.IsEmpty() {
-		a.ReferenceNumber = params.ReferenceNumber
 		a.Coin.UserId = params.FromUserId
 		a.Coin.Balance += params.FromAmount
 
