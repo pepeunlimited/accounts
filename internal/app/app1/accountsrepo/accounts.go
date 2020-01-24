@@ -33,9 +33,9 @@ type AccountsRepository interface {
 	GetAccountByUserAndAccountID(ctx context.Context, userID int64, accountID int) (*ent.Accounts, error)
 
 	Deposit(ctx context.Context, amount int64, toAccountID int, toUserID int64, referenceNumber *string) (*sql.Tx, error)
-	Withdraw(ctx context.Context, withdrawAmount int64, fromAccountID int, fromUserID int64) (*sql.Tx, error)
+	Withdraw(ctx context.Context, withdrawAmount int64, fromAccountID int, fromUserID int64, referenceNumber *string) (*sql.Tx, error)
 
-	DoWithdraw(ctx context.Context, withdrawAmount int64, fromAccountID int, fromUserID int64) error
+	DoWithdraw(ctx context.Context, withdrawAmount int64, fromAccountID int, fromUserID int64, referenceNumber *string) error
 	DoDeposit(ctx context.Context, amount int64, toAccountID int, toUserID int64, referenceNumber *string) error
 
 	UpdateAccountVerified(ctx context.Context, userID int64) (*ent.Accounts, error)
@@ -75,8 +75,8 @@ func (mysql accountsMySQL) CreateAccount(ctx context.Context, userId int64) (*en
 	return mysql.create(ctx, userId)
 }
 
-func (mysql accountsMySQL) DoWithdraw(ctx context.Context, withdrawAmount int64, fromCashAccountID int, fromUserID int64) error {
-	deposit, err := mysql.Withdraw(ctx, withdrawAmount, fromCashAccountID, fromUserID)
+func (mysql accountsMySQL) DoWithdraw(ctx context.Context, withdrawAmount int64, fromCashAccountID int, fromUserID int64, referenceNumber *string) error {
+	deposit, err := mysql.Withdraw(ctx, withdrawAmount, fromCashAccountID, fromUserID, referenceNumber)
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func (mysql accountsMySQL) Deposit(ctx context.Context, amount int64, toAccountI
 	return tx, nil
 }
 
-func (mysql accountsMySQL) Withdraw(ctx context.Context, withdrawAmount int64, fromAccountID int, fromUserID int64) (*sql.Tx, error) {
+func (mysql accountsMySQL) Withdraw(ctx context.Context, withdrawAmount int64, fromAccountID int, fromUserID int64, referenceNumber *string) (*sql.Tx, error) {
 	if withdrawAmount > 0 {
 		return nil, ErrInvalidAmount
 	}
@@ -129,7 +129,7 @@ func (mysql accountsMySQL) Withdraw(ctx context.Context, withdrawAmount int64, f
 		return nil, err
 	}
 	//write tx history
-	if err = mysql.createTX(ctx, fromAccountID, withdrawAmount, Withdraw, tx, nil); err != nil {
+	if err = mysql.createTX(ctx, fromAccountID, withdrawAmount, Withdraw, tx, referenceNumber); err != nil {
 		return nil, err
 	}
 	return tx, nil

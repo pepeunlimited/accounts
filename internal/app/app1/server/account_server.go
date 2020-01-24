@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/google/uuid"
 	"github.com/pepeunlimited/accounts/accountsrpc"
 	"github.com/pepeunlimited/accounts/internal/app/app1/accountsrepo"
 	"github.com/pepeunlimited/accounts/internal/app/app1/ent"
@@ -66,7 +67,8 @@ func (server AccountServer) CreateWithdraw(ctx context.Context, params *accounts
 	if !account.IsVerified {
 		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountIsNotVerified)
 	}
-	tx, err := server.accounts.Withdraw(ctx, params.Amount, account.ID, params.UserId)
+	referenceNumber := uuid.New().String()
+	tx, err := server.accounts.Withdraw(ctx, params.Amount, account.ID, params.UserId, &referenceNumber)
 	if err != nil {
 		return nil, server.isAccountError(err)
 	}

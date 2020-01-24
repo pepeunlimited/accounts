@@ -44,7 +44,7 @@ func TestAccountsMySQL_WithdrawOcc(t *testing.T) {
 	accounts.DoDeposit(ctx, int64(200000), fromAccount.ID, fromUserId, nil)
 	withdrawAmount := int64(100)
 	for i := 0; i < 100; i++ {
-		go accounts.DoWithdraw(ctx, -withdrawAmount, fromAccount.ID, fromUserId)
+		go accounts.DoWithdraw(ctx, -withdrawAmount, fromAccount.ID, fromUserId, nil)
 	}
 	time.Sleep(3 * time.Second)
 }
@@ -64,7 +64,7 @@ func TestAccountsMySQL_Withdraw(t *testing.T) {
 	}
 	accounts.DoDeposit(ctx, int64(200), fromAccount.ID, fromUserId, nil)
 	withdrawAmount := int64(100)
-	err = accounts.DoWithdraw(ctx, -withdrawAmount, fromAccount.ID, fromUserId)
+	err = accounts.DoWithdraw(ctx, -withdrawAmount, fromAccount.ID, fromUserId, nil)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -98,7 +98,7 @@ func TestAccountsMySQL_UpdateBalanceLowBalance(t *testing.T) {
 	}
 	tx.Commit()
 
-	tx, err = accounts.Withdraw(ctx, -30, account.ID, userId)
+	tx, err = accounts.Withdraw(ctx, -30, account.ID, userId,nil)
 	if err == nil {
 		t.FailNow()
 	}
