@@ -54,7 +54,7 @@ func TestAccountServer_NotFound(t *testing.T) {
 	if account != nil {
 		t.FailNow()
 	}
-	if !accountsrpc.IsReason(err.(twirp.Error), accountsrpc.AccountNotFound) {
+	if err.(twirp.Error).Msg() != accountsrpc.AccountNotFound {
 		t.Error(err.(twirp.Error).Meta(accountsrpc.AccountNotFound))
 		t.FailNow()
 	}

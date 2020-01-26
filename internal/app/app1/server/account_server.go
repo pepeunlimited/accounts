@@ -8,7 +8,6 @@ import (
 	"github.com/pepeunlimited/accounts/internal/app/app1/accountsrepo"
 	"github.com/pepeunlimited/accounts/internal/app/app1/ent"
 	"github.com/pepeunlimited/accounts/internal/app/app1/validator"
-	"github.com/pepeunlimited/microservice-kit/rpcz"
 	"github.com/twitchtv/twirp"
 	"log"
 )
@@ -46,7 +45,7 @@ func (server AccountServer) CreateDeposit(ctx context.Context, params *accountsr
 	err = tx.Commit()
 	if err != nil {
 		log.Print("accounts-service: deposit commit failure: "+err.Error())
-		return nil, twirp.NewError(twirp.Aborted, err.Error()).WithMeta(rpcz.Reason, accountsrpc.AccountTXsCommit)
+		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsCommit)
 	}
 	deposited, err := server.accounts.GetAccountByUserID(ctx, params.UserId)
 	if err != nil {
@@ -65,7 +64,7 @@ func (server AccountServer) CreateWithdraw(ctx context.Context, params *accounts
 		return nil, server.isAccountError(err)
 	}
 	if !account.IsVerified {
-		return nil, twirp.NewError(twirp.Aborted, "account is not verified").WithMeta(rpcz.Reason, accountsrpc.AccountIsNotVerified)
+		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountIsNotVerified)
 	}
 	referenceNumber := uuid.New().String()
 	tx, err := server.accounts.Withdraw(ctx, params.Amount, account.ID, params.UserId, &referenceNumber)
@@ -75,7 +74,7 @@ func (server AccountServer) CreateWithdraw(ctx context.Context, params *accounts
 	err = tx.Commit()
 	if err != nil {
 		log.Print("accounts-service: withdraw commit failure: "+err.Error())
-		return nil, twirp.NewError(twirp.Aborted, err.Error()).WithMeta(rpcz.Reason, accountsrpc.AccountTXsCommit)
+		return nil, twirp.NewError(twirp.Aborted, accountsrpc.AccountTXsCommit)
 	}
 	withdrawn, err := server.accounts.GetAccountByUserID(ctx, params.UserId)
 	if err != nil {
@@ -118,16 +117,16 @@ func (server AccountServer) GetAccount(ctx context.Context, params *accountsrpc.
 func (server AccountServer) isAccountError(err error) error {
 	switch err {
 	case accountsrepo.ErrAccountNotExist:
-		return twirp.NotFoundError(accountsrpc.AccountNotFound).WithMeta(rpcz.Reason, accountsrpc.AccountNotFound)
+		return twirp.NotFoundError(accountsrpc.AccountNotFound)
 	case accountsrepo.ErrUserAccountExist:
-		return twirp.NewError(twirp.AlreadyExists, err.Error()).WithMeta(rpcz.Reason, accountsrpc.AccountExist)
+		return twirp.NewError(twirp.AlreadyExists, accountsrpc.AccountExist)
 	case accountsrepo.ErrInvalidAmount:
-		return twirp.NewError(twirp.Aborted, err.Error()).WithMeta(rpcz.Reason, accountsrpc.AccountInvalidAmount)
+		return twirp.NewError(twirp.Aborted, accountsrpc.AccountInvalidAmount)
 	case accountsrepo.ErrLowAccountBalance:
-		return twirp.NewError(twirp.Aborted, err.Error()).WithMeta(rpcz.Reason, accountsrpc.LowAccountBalance)
+		return twirp.NewError(twirp.Aborted, accountsrpc.LowAccountBalance)
 	}
-	log.Print("accounts: unknown error: "+err.Error())
-	return twirp.NewError(twirp.Internal ,"unknown error: "+err.Error())
+	log.Print("accounts-service: unknown error: "+err.Error())
+	return twirp.InternalErrorWith(err)
 }
 
 func NewAccountServer(client *ent.Client) AccountServer {

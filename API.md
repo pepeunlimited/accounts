@@ -6,9 +6,7 @@
 ##### UpdateAccountVerified
 
 ```
-$ curl -H "Content-Type: application/json" \
--X POST "api.dev.pepeunlimited.com/twirp/pepeunlimited.accounts.AccountService/UpdateAccountVerified" \
--d '{"user_id": 1}'
+$  
 ```
 
 ##### CreateAccount

@@ -5,7 +5,7 @@ metadata:
   labels:
     app: accounts
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: accounts
@@ -26,7 +26,7 @@ spec:
               value: root
             - name: MYSQL_USER
               value: root
-          image: pepeunlimited/accounts:0.1.9
+          image: pepeunlimited/accounts:0.1.10
           name: accounts
           ports:
             - containerPort: 8080
