@@ -1,3 +1,6 @@
 [submodule "accountsrpc/protobuf"]
 	path = accountsrpc/protobuf
 	url = git@github.com:pepeunlimited/protobuf.git
+[submodule "pkg/protobuf"]
+	path = pkg/protobuf
+	url = git@github.com:pepeunlimited/protobuf.git
