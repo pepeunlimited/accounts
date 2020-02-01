@@ -2,6 +2,8 @@
 
 A starting point project to create `accounts`-service
 
+Using `Optimistic concurrency control (OCC)` to avoid race conditions when updating account's balance.
+
 ## Go Directories
 
 ### `/build`
