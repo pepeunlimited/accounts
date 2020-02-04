@@ -5,7 +5,7 @@ import "strings"
 type TxType int
 
 const (
-	UnknownTx = iota + 1
+	Unknown = iota + 1
 	Withdraw
 	Deposit
 	Charge
@@ -20,14 +20,14 @@ func TxTypeFromString(tt string) TxType {
 	tt = strings.ToLower(tt)
 	switch tt {
 	case "withdraw":
-		return Withdraw
+		return 1
 	case "deposit":
-		return Deposit
+		return 2
 	case "charge":
-		return Charge
+		return 3
 	case "transfer":
-		return Transfer
+		return 4
 	default:
-		return UnknownTx
+		return 0
 	}
 }
