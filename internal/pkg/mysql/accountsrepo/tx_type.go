@@ -13,7 +13,7 @@ const (
 )
 
 func (ac TxType) String() string {
-	return [...]string{"UNKNOWN", "WITHDRAW", "DEPOSIT", "CHARGE", "TRANSFER"}[ac - 1]
+	return [...]string{"UNKNOWN", "WITHDRAW", "DEPOSIT", "CHARGE", "TRANSFER"}[ac]
 }
 
 func TxTypeFromString(tt string) TxType {
