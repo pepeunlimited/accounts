@@ -13,20 +13,20 @@ const (
 )
 
 func (ac TxType) String() string {
-	return [...]string{"UNKNOWN", "WITHDRAW", "DEPOSIT", "CHARGE", "TRANSFER"}[ac]
+	return [...]string{"UNKNOWN", "WITHDRAW", "DEPOSIT", "CHARGE", "TRANSFER"}[ac-1]
 }
 
 func TxTypeFromString(tt string) TxType {
 	tt = strings.ToLower(tt)
 	switch tt {
 	case "withdraw":
-		return 1
-	case "deposit":
 		return 2
-	case "charge":
+	case "deposit":
 		return 3
-	case "transfer":
+	case "charge":
 		return 4
+	case "transfer":
+		return 5
 	default:
 		return 0
 	}
