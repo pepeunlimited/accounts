@@ -5,7 +5,7 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/google/uuid"
 	"github.com/pepeunlimited/accounts/internal/pkg/ent"
-	"github.com/pepeunlimited/accounts/internal/pkg/mysql/accountsrepo"
+	"github.com/pepeunlimited/accounts/internal/pkg/mysql/accountrepo"
 	"github.com/pepeunlimited/accounts/internal/server/validator"
 	"github.com/pepeunlimited/accounts/pkg/accountsrpc"
 	"github.com/twitchtv/twirp"
@@ -13,7 +13,7 @@ import (
 )
 
 type AccountServer struct {
-	accounts  accountsrepo.AccountsRepository
+	accounts  accountrepo.AccountRepository
 	validator validator.AccountServerValidator
 }
 
@@ -116,13 +116,13 @@ func (server AccountServer) GetAccount(ctx context.Context, params *accountsrpc.
 
 func (server AccountServer) isAccountError(err error) error {
 	switch err {
-	case accountsrepo.ErrAccountNotExist:
+	case accountrepo.ErrAccountNotExist:
 		return twirp.NotFoundError(accountsrpc.AccountNotFound)
-	case accountsrepo.ErrUserAccountExist:
+	case accountrepo.ErrUserAccountExist:
 		return twirp.NewError(twirp.AlreadyExists, accountsrpc.AccountExist)
-	case accountsrepo.ErrInvalidAmount:
+	case accountrepo.ErrInvalidAmount:
 		return twirp.NewError(twirp.Aborted, accountsrpc.AccountInvalidAmount)
-	case accountsrepo.ErrLowAccountBalance:
+	case accountrepo.ErrLowAccountBalance:
 		return twirp.NewError(twirp.Aborted, accountsrpc.LowAccountBalance)
 	}
 	log.Print("accounts-service: unknown error: "+err.Error())
@@ -131,7 +131,7 @@ func (server AccountServer) isAccountError(err error) error {
 
 func NewAccountServer(client *ent.Client) AccountServer {
 	return AccountServer{
-		accounts:  accountsrepo.NewAccountsRepository(client),
+		accounts:  accountrepo.NewAccountRepository(client),
 		validator: validator.NewAccountServerValidator(),
 	}
 }

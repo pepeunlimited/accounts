@@ -1,4 +1,4 @@
-package accountsrepo
+package accountrepo
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 func TestAccountsMySQL_Create(t *testing.T) {
 	ctx := context.TODO()
 	client := ent.NewEntClient()
-	accounts := NewAccountsRepository(client)
+	accounts := NewAccountRepository(client)
 	accounts.DeleteAll(ctx)
 	userId := int64(1)
 	coin, err := accounts.CreateAccount(ctx, userId)
@@ -33,7 +33,7 @@ func TestAccountsMySQL_Create(t *testing.T) {
 func TestAccountsMySQL_WithdrawOcc(t *testing.T) {
 	ctx := context.TODO()
 	client := ent.NewEntClient()
-	accounts := NewAccountsRepository(client)
+	accounts := NewAccountRepository(client)
 	accounts.DeleteAll(ctx)
 	fromUserId := int64(1)
 	fromAccount, err := accounts.CreateAccount(ctx, fromUserId)
@@ -53,7 +53,7 @@ func TestAccountsMySQL_WithdrawOcc(t *testing.T) {
 func TestAccountsMySQL_Withdraw(t *testing.T) {
 	ctx := context.TODO()
 	client := ent.NewEntClient()
-	accounts := NewAccountsRepository(client)
+	accounts := NewAccountRepository(client)
 	accounts.DeleteAll(ctx)
 
 	fromUserId := int64(1)
@@ -74,7 +74,7 @@ func TestAccountsMySQL_Withdraw(t *testing.T) {
 func TestAccountsMySQL_UpdateBalanceLowBalance(t *testing.T) {
 	ctx := context.TODO()
 	client := ent.NewEntClient()
-	accounts := NewAccountsRepository(client)
+	accounts := NewAccountRepository(client)
 	accounts.DeleteAll(ctx)
 
 
@@ -113,7 +113,7 @@ func TestAccountsMySQL_UpdateBalanceLowBalance(t *testing.T) {
 func TestAccountsMySQL_UpdateBalanceVersionOver255(t *testing.T) {
 	ctx := context.TODO()
 	client := ent.NewEntClient()
-	accounts := NewAccountsRepository(client)
+	accounts := NewAccountRepository(client)
 	accounts.DeleteAll(ctx)
 
 	userId := int64(1)
@@ -134,7 +134,7 @@ func TestAccountsMySQL_UpdateBalanceVersionOver255(t *testing.T) {
 func TestAccountsMySQL_UpdateBalanceVersionOccTest(t *testing.T) {
 	ctx := context.TODO()
 	client := ent.NewEntClient()
-	accounts := NewAccountsRepository(client)
+	accounts := NewAccountRepository(client)
 	accounts.DeleteAll(ctx)
 
 	userId := int64(1)
@@ -152,7 +152,7 @@ func TestAccountsMySQL_UpdateBalanceVersionOccTest(t *testing.T) {
 func TestAccountsMySQL_GetAccountByUserAndAccountID(t *testing.T) {
 	ctx := context.TODO()
 	client := ent.NewEntClient()
-	accounts := NewAccountsRepository(client)
+	accounts := NewAccountRepository(client)
 	accounts.DeleteAll(ctx)
 
 	_, err := accounts.GetAccountByUserAndAccountID(ctx, 1, 1)
@@ -167,7 +167,7 @@ func TestAccountsMySQL_GetAccountByUserAndAccountID(t *testing.T) {
 func TestAccountsMySQL_GetAccountByUserAndAccountID2(t *testing.T) {
 	ctx := context.TODO()
 	client := ent.NewEntClient()
-	accounts := NewAccountsRepository(client)
+	accounts := NewAccountRepository(client)
 	accounts.DeleteAll(ctx)
 
 	userId := int64(2)

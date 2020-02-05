@@ -1,4 +1,4 @@
-package accountsrepo
+package accountrepo
 
 import (
 	"context"
@@ -25,7 +25,7 @@ var (
 	ErrInvalidAmount 			= errors.New("accounts: invalid amount")
 )
 
-type AccountsRepository interface {
+type AccountRepository interface {
 	CreateAccount(ctx context.Context, userId int64) (*ent.Account, error)
 
 	GetAccountByUserID(ctx context.Context, userID int64) (*ent.Account, error)
@@ -221,6 +221,6 @@ func rollback(tx *sql.Tx) {
 	}
 }
 
-func NewAccountsRepository(client *ent.Client) AccountsRepository {
+func NewAccountRepository(client *ent.Client) AccountRepository {
 	return accountsMySQL{client:client, isDebug:isDebug()}
 }
