@@ -4,14 +4,14 @@ package ent
 
 import (
 	"fmt"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/accounts"
 	"strings"
 
 	"github.com/facebookincubator/ent/dialect/sql"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/account"
 )
 
-// Accounts is the model entity for the Accounts schema.
-type Accounts struct {
+// Account is the model entity for the Account schema.
+type Account struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
@@ -24,15 +24,30 @@ type Accounts struct {
 	// UserID holds the value of the "user_id" field.
 	UserID int64 `json:"user_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the AccountsQuery when eager-loading is set.
-	Edges struct {
-		// Txs holds the value of the txs edge.
-		Txs []*Txs
-	} `json:"edges"`
+	// The values are being populated by the AccountQuery when eager-loading is set.
+	Edges AccountEdges `json:"edges"`
+}
+
+// AccountEdges holds the relations/edges for other nodes in the graph.
+type AccountEdges struct {
+	// Txs holds the value of the txs edge.
+	Txs []*Txs
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// TxsOrErr returns the Txs value or an error if the edge
+// was not loaded in eager-loading.
+func (e AccountEdges) TxsOrErr() ([]*Txs, error) {
+	if e.loadedTypes[0] {
+		return e.Txs, nil
+	}
+	return nil, &NotLoadedError{edge: "txs"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*Accounts) scanValues() []interface{} {
+func (*Account) scanValues() []interface{} {
 	return []interface{}{
 		&sql.NullInt64{}, // id
 		&sql.NullInt64{}, // balance
@@ -43,9 +58,9 @@ func (*Accounts) scanValues() []interface{} {
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the Accounts fields.
-func (a *Accounts) assignValues(values ...interface{}) error {
-	if m, n := len(values), len(accounts.Columns); m < n {
+// to the Account fields.
+func (a *Account) assignValues(values ...interface{}) error {
+	if m, n := len(values), len(account.Columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	value, ok := values[0].(*sql.NullInt64)
@@ -77,33 +92,33 @@ func (a *Accounts) assignValues(values ...interface{}) error {
 	return nil
 }
 
-// QueryTxs queries the txs edge of the Accounts.
-func (a *Accounts) QueryTxs() *TxsQuery {
-	return (&AccountsClient{a.config}).QueryTxs(a)
+// QueryTxs queries the txs edge of the Account.
+func (a *Account) QueryTxs() *TxsQuery {
+	return (&AccountClient{a.config}).QueryTxs(a)
 }
 
-// Update returns a builder for updating this Accounts.
-// Note that, you need to call Accounts.Unwrap() before calling this method, if this Accounts
+// Update returns a builder for updating this Account.
+// Note that, you need to call Account.Unwrap() before calling this method, if this Account
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (a *Accounts) Update() *AccountsUpdateOne {
-	return (&AccountsClient{a.config}).UpdateOne(a)
+func (a *Account) Update() *AccountUpdateOne {
+	return (&AccountClient{a.config}).UpdateOne(a)
 }
 
 // Unwrap unwraps the entity that was returned from a transaction after it was closed,
 // so that all next queries will be executed through the driver which created the transaction.
-func (a *Accounts) Unwrap() *Accounts {
+func (a *Account) Unwrap() *Account {
 	tx, ok := a.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: Accounts is not a transactional entity")
+		panic("ent: Account is not a transactional entity")
 	}
 	a.config.driver = tx.drv
 	return a
 }
 
 // String implements the fmt.Stringer.
-func (a *Accounts) String() string {
+func (a *Account) String() string {
 	var builder strings.Builder
-	builder.WriteString("Accounts(")
+	builder.WriteString("Account(")
 	builder.WriteString(fmt.Sprintf("id=%v", a.ID))
 	builder.WriteString(", balance=")
 	builder.WriteString(fmt.Sprintf("%v", a.Balance))
@@ -117,10 +132,10 @@ func (a *Accounts) String() string {
 	return builder.String()
 }
 
-// AccountsSlice is a parsable slice of Accounts.
-type AccountsSlice []*Accounts
+// Accounts is a parsable slice of Account.
+type Accounts []*Account
 
-func (a AccountsSlice) config(cfg config) {
+func (a Accounts) config(cfg config) {
 	for _i := range a {
 		a[_i].config = cfg
 	}

@@ -6,14 +6,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/accounts"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/predicate"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 	"math"
 
 	"github.com/facebookincubator/ent/dialect/sql"
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
 	"github.com/facebookincubator/ent/schema/field"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/account"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/predicate"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 )
 
 // TxsQuery is the builder for querying Txs entities.
@@ -25,7 +25,7 @@ type TxsQuery struct {
 	unique     []string
 	predicates []predicate.Txs
 	// eager-loading edges.
-	withAccounts *AccountsQuery
+	withAccounts *AccountQuery
 	withFKs      bool
 	// intermediate query.
 	sql *sql.Selector
@@ -56,25 +56,25 @@ func (tq *TxsQuery) Order(o ...Order) *TxsQuery {
 }
 
 // QueryAccounts chains the current query on the accounts edge.
-func (tq *TxsQuery) QueryAccounts() *AccountsQuery {
-	query := &AccountsQuery{config: tq.config}
+func (tq *TxsQuery) QueryAccounts() *AccountQuery {
+	query := &AccountQuery{config: tq.config}
 	step := sqlgraph.NewStep(
 		sqlgraph.From(txs.Table, txs.FieldID, tq.sqlQuery()),
-		sqlgraph.To(accounts.Table, accounts.FieldID),
+		sqlgraph.To(account.Table, account.FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, txs.AccountsTable, txs.AccountsColumn),
 	)
 	query.sql = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 	return query
 }
 
-// First returns the first Txs entity in the query. Returns *ErrNotFound when no txs was found.
+// First returns the first Txs entity in the query. Returns *NotFoundError when no txs was found.
 func (tq *TxsQuery) First(ctx context.Context) (*Txs, error) {
 	ts, err := tq.Limit(1).All(ctx)
 	if err != nil {
 		return nil, err
 	}
 	if len(ts) == 0 {
-		return nil, &ErrNotFound{txs.Label}
+		return nil, &NotFoundError{txs.Label}
 	}
 	return ts[0], nil
 }
@@ -88,14 +88,14 @@ func (tq *TxsQuery) FirstX(ctx context.Context) *Txs {
 	return t
 }
 
-// FirstID returns the first Txs id in the query. Returns *ErrNotFound when no id was found.
+// FirstID returns the first Txs id in the query. Returns *NotFoundError when no id was found.
 func (tq *TxsQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = tq.Limit(1).IDs(ctx); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &ErrNotFound{txs.Label}
+		err = &NotFoundError{txs.Label}
 		return
 	}
 	return ids[0], nil
@@ -120,9 +120,9 @@ func (tq *TxsQuery) Only(ctx context.Context) (*Txs, error) {
 	case 1:
 		return ts[0], nil
 	case 0:
-		return nil, &ErrNotFound{txs.Label}
+		return nil, &NotFoundError{txs.Label}
 	default:
-		return nil, &ErrNotSingular{txs.Label}
+		return nil, &NotSingularError{txs.Label}
 	}
 }
 
@@ -145,9 +145,9 @@ func (tq *TxsQuery) OnlyID(ctx context.Context) (id int, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &ErrNotFound{txs.Label}
+		err = &NotFoundError{txs.Label}
 	default:
-		err = &ErrNotSingular{txs.Label}
+		err = &NotSingularError{txs.Label}
 	}
 	return
 }
@@ -238,8 +238,8 @@ func (tq *TxsQuery) Clone() *TxsQuery {
 
 //  WithAccounts tells the query-builder to eager-loads the nodes that are connected to
 // the "accounts" edge. The optional arguments used to configure the query builder of the edge.
-func (tq *TxsQuery) WithAccounts(opts ...func(*AccountsQuery)) *TxsQuery {
-	query := &AccountsQuery{config: tq.config}
+func (tq *TxsQuery) WithAccounts(opts ...func(*AccountQuery)) *TxsQuery {
+	query := &AccountQuery{config: tq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
@@ -290,9 +290,12 @@ func (tq *TxsQuery) Select(field string, fields ...string) *TxsSelect {
 
 func (tq *TxsQuery) sqlAll(ctx context.Context) ([]*Txs, error) {
 	var (
-		nodes   []*Txs
-		withFKs = tq.withFKs
-		_spec   = tq.querySpec()
+		nodes       = []*Txs{}
+		withFKs     = tq.withFKs
+		_spec       = tq.querySpec()
+		loadedTypes = [1]bool{
+			tq.withAccounts != nil,
+		}
 	)
 	if tq.withAccounts != nil {
 		withFKs = true
@@ -314,6 +317,7 @@ func (tq *TxsQuery) sqlAll(ctx context.Context) ([]*Txs, error) {
 			return fmt.Errorf("ent: Assign called without calling ScanValues")
 		}
 		node := nodes[len(nodes)-1]
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(values...)
 	}
 	if err := sqlgraph.QueryNodes(ctx, tq.driver, _spec); err != nil {
@@ -327,12 +331,12 @@ func (tq *TxsQuery) sqlAll(ctx context.Context) ([]*Txs, error) {
 		ids := make([]int, 0, len(nodes))
 		nodeids := make(map[int][]*Txs)
 		for i := range nodes {
-			if fk := nodes[i].accounts_id; fk != nil {
+			if fk := nodes[i].account_txs; fk != nil {
 				ids = append(ids, *fk)
 				nodeids[*fk] = append(nodeids[*fk], nodes[i])
 			}
 		}
-		query.Where(accounts.IDIn(ids...))
+		query.Where(account.IDIn(ids...))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
@@ -340,7 +344,7 @@ func (tq *TxsQuery) sqlAll(ctx context.Context) ([]*Txs, error) {
 		for _, n := range neighbors {
 			nodes, ok := nodeids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "accounts_id" returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "account_txs" returned %v`, n.ID)
 			}
 			for i := range nodes {
 				nodes[i].Edges.Accounts = n

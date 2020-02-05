@@ -6,12 +6,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/accounts"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 	"time"
 
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
 	"github.com/facebookincubator/ent/schema/field"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/account"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 )
 
 // TxsCreate is the builder for creating a Txs entity.
@@ -56,7 +56,7 @@ func (tc *TxsCreate) SetNillableReferenceNumber(s *string) *TxsCreate {
 	return tc
 }
 
-// SetAccountsID sets the accounts edge to Accounts by id.
+// SetAccountsID sets the accounts edge to Account by id.
 func (tc *TxsCreate) SetAccountsID(id int) *TxsCreate {
 	if tc.accounts == nil {
 		tc.accounts = make(map[int]struct{})
@@ -65,7 +65,7 @@ func (tc *TxsCreate) SetAccountsID(id int) *TxsCreate {
 	return tc
 }
 
-// SetNillableAccountsID sets the accounts edge to Accounts by id if the given value is not nil.
+// SetNillableAccountsID sets the accounts edge to Account by id if the given value is not nil.
 func (tc *TxsCreate) SetNillableAccountsID(id *int) *TxsCreate {
 	if id != nil {
 		tc = tc.SetAccountsID(*id)
@@ -73,8 +73,8 @@ func (tc *TxsCreate) SetNillableAccountsID(id *int) *TxsCreate {
 	return tc
 }
 
-// SetAccounts sets the accounts edge to Accounts.
-func (tc *TxsCreate) SetAccounts(a *Accounts) *TxsCreate {
+// SetAccounts sets the accounts edge to Account.
+func (tc *TxsCreate) SetAccounts(a *Account) *TxsCreate {
 	return tc.SetAccountsID(a.ID)
 }
 
@@ -165,7 +165,7 @@ func (tc *TxsCreate) sqlSave(ctx context.Context) (*Txs, error) {
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: accounts.FieldID,
+					Column: account.FieldID,
 				},
 			},
 		}

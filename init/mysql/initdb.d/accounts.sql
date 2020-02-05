@@ -28,8 +28,8 @@ CREATE TABLE txs (
     tx_type             CHAR(10) NOT NULL,                     -- withdraw, deposit, charge
     created_at          DATETIME(3) NOT NULL,                  --
     amount              BIGINT NOT NULL,                       -- int64 -9223372036854775807 - 9223372036854775807
-    accounts_id         INT(10) NOT NULL,                      --
+    account_txs         INT(10) NOT NULL,                      --
     reference_number    CHAR(36) NULL,                         --
-    FOREIGN KEY (accounts_id) REFERENCES accounts (id),        --
+    FOREIGN KEY (account_txs) REFERENCES accounts (id),        --
     PRIMARY KEY (id)
 );

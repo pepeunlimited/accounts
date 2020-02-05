@@ -30,7 +30,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "amount", Type: field.TypeInt64},
 		{Name: "reference_number", Type: field.TypeString, Nullable: true, Size: 36},
-		{Name: "accounts_id", Type: field.TypeInt, Nullable: true},
+		{Name: "account_txs", Type: field.TypeInt, Nullable: true},
 	}
 	// TxsTable holds the schema information for the "txs" table.
 	TxsTable = &schema.Table{

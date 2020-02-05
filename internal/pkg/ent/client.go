@@ -5,10 +5,12 @@ package ent
 import (
 	"context"
 	"fmt"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/accounts"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/migrate"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 	"log"
+
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/migrate"
+
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/account"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 
 	"github.com/facebookincubator/ent/dialect"
 	"github.com/facebookincubator/ent/dialect/sql"
@@ -20,8 +22,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
-	// Accounts is the client for interacting with the Accounts builders.
-	Accounts *AccountsClient
+	// Account is the client for interacting with the Account builders.
+	Account *AccountClient
 	// Txs is the client for interacting with the Txs builders.
 	Txs *TxsClient
 }
@@ -31,10 +33,10 @@ func NewClient(opts ...Option) *Client {
 	c := config{log: log.Println}
 	c.options(opts...)
 	return &Client{
-		config:   c,
-		Schema:   migrate.NewSchema(c.driver),
-		Accounts: NewAccountsClient(c),
-		Txs:      NewTxsClient(c),
+		config:  c,
+		Schema:  migrate.NewSchema(c.driver),
+		Account: NewAccountClient(c),
+		Txs:     NewTxsClient(c),
 	}
 }
 
@@ -65,16 +67,16 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	}
 	cfg := config{driver: tx, log: c.log, debug: c.debug}
 	return &Tx{
-		config:   cfg,
-		Accounts: NewAccountsClient(cfg),
-		Txs:      NewTxsClient(cfg),
+		config:  cfg,
+		Account: NewAccountClient(cfg),
+		Txs:     NewTxsClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Accounts.
+//		Account.
 //		Query().
 //		Count(ctx)
 //
@@ -84,10 +86,10 @@ func (c *Client) Debug() *Client {
 	}
 	cfg := config{driver: dialect.Debug(c.driver, c.log), log: c.log, debug: true}
 	return &Client{
-		config:   cfg,
-		Schema:   migrate.NewSchema(cfg.driver),
-		Accounts: NewAccountsClient(cfg),
-		Txs:      NewTxsClient(cfg),
+		config:  cfg,
+		Schema:  migrate.NewSchema(cfg.driver),
+		Account: NewAccountClient(cfg),
+		Txs:     NewTxsClient(cfg),
 	}
 }
 
@@ -96,63 +98,63 @@ func (c *Client) Close() error {
 	return c.driver.Close()
 }
 
-// AccountsClient is a client for the Accounts schema.
-type AccountsClient struct {
+// AccountClient is a client for the Account schema.
+type AccountClient struct {
 	config
 }
 
-// NewAccountsClient returns a client for the Accounts from the given config.
-func NewAccountsClient(c config) *AccountsClient {
-	return &AccountsClient{config: c}
+// NewAccountClient returns a client for the Account from the given config.
+func NewAccountClient(c config) *AccountClient {
+	return &AccountClient{config: c}
 }
 
-// Create returns a create builder for Accounts.
-func (c *AccountsClient) Create() *AccountsCreate {
-	return &AccountsCreate{config: c.config}
+// Create returns a create builder for Account.
+func (c *AccountClient) Create() *AccountCreate {
+	return &AccountCreate{config: c.config}
 }
 
-// Update returns an update builder for Accounts.
-func (c *AccountsClient) Update() *AccountsUpdate {
-	return &AccountsUpdate{config: c.config}
+// Update returns an update builder for Account.
+func (c *AccountClient) Update() *AccountUpdate {
+	return &AccountUpdate{config: c.config}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *AccountsClient) UpdateOne(a *Accounts) *AccountsUpdateOne {
+func (c *AccountClient) UpdateOne(a *Account) *AccountUpdateOne {
 	return c.UpdateOneID(a.ID)
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *AccountsClient) UpdateOneID(id int) *AccountsUpdateOne {
-	return &AccountsUpdateOne{config: c.config, id: id}
+func (c *AccountClient) UpdateOneID(id int) *AccountUpdateOne {
+	return &AccountUpdateOne{config: c.config, id: id}
 }
 
-// Delete returns a delete builder for Accounts.
-func (c *AccountsClient) Delete() *AccountsDelete {
-	return &AccountsDelete{config: c.config}
+// Delete returns a delete builder for Account.
+func (c *AccountClient) Delete() *AccountDelete {
+	return &AccountDelete{config: c.config}
 }
 
 // DeleteOne returns a delete builder for the given entity.
-func (c *AccountsClient) DeleteOne(a *Accounts) *AccountsDeleteOne {
+func (c *AccountClient) DeleteOne(a *Account) *AccountDeleteOne {
 	return c.DeleteOneID(a.ID)
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *AccountsClient) DeleteOneID(id int) *AccountsDeleteOne {
-	return &AccountsDeleteOne{c.Delete().Where(accounts.ID(id))}
+func (c *AccountClient) DeleteOneID(id int) *AccountDeleteOne {
+	return &AccountDeleteOne{c.Delete().Where(account.ID(id))}
 }
 
-// Create returns a query builder for Accounts.
-func (c *AccountsClient) Query() *AccountsQuery {
-	return &AccountsQuery{config: c.config}
+// Create returns a query builder for Account.
+func (c *AccountClient) Query() *AccountQuery {
+	return &AccountQuery{config: c.config}
 }
 
-// Get returns a Accounts entity by its id.
-func (c *AccountsClient) Get(ctx context.Context, id int) (*Accounts, error) {
-	return c.Query().Where(accounts.ID(id)).Only(ctx)
+// Get returns a Account entity by its id.
+func (c *AccountClient) Get(ctx context.Context, id int) (*Account, error) {
+	return c.Query().Where(account.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *AccountsClient) GetX(ctx context.Context, id int) *Accounts {
+func (c *AccountClient) GetX(ctx context.Context, id int) *Account {
 	a, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -160,14 +162,14 @@ func (c *AccountsClient) GetX(ctx context.Context, id int) *Accounts {
 	return a
 }
 
-// QueryTxs queries the txs edge of a Accounts.
-func (c *AccountsClient) QueryTxs(a *Accounts) *TxsQuery {
+// QueryTxs queries the txs edge of a Account.
+func (c *AccountClient) QueryTxs(a *Account) *TxsQuery {
 	query := &TxsQuery{config: c.config}
 	id := a.ID
 	step := sqlgraph.NewStep(
-		sqlgraph.From(accounts.Table, accounts.FieldID, id),
+		sqlgraph.From(account.Table, account.FieldID, id),
 		sqlgraph.To(txs.Table, txs.FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, accounts.TxsTable, accounts.TxsColumn),
+		sqlgraph.Edge(sqlgraph.O2M, false, account.TxsTable, account.TxsColumn),
 	)
 	query.sql = sqlgraph.Neighbors(a.driver.Dialect(), step)
 
@@ -239,12 +241,12 @@ func (c *TxsClient) GetX(ctx context.Context, id int) *Txs {
 }
 
 // QueryAccounts queries the accounts edge of a Txs.
-func (c *TxsClient) QueryAccounts(t *Txs) *AccountsQuery {
-	query := &AccountsQuery{config: c.config}
+func (c *TxsClient) QueryAccounts(t *Txs) *AccountQuery {
+	query := &AccountQuery{config: c.config}
 	id := t.ID
 	step := sqlgraph.NewStep(
 		sqlgraph.From(txs.Table, txs.FieldID, id),
-		sqlgraph.To(accounts.Table, accounts.FieldID),
+		sqlgraph.To(account.Table, account.FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, txs.AccountsTable, txs.AccountsColumn),
 	)
 	query.sql = sqlgraph.Neighbors(t.driver.Dialect(), step)

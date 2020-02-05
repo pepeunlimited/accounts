@@ -6,8 +6,8 @@ import (
 	"github.com/facebookincubator/ent/dialect/sql"
 )
 
-// Accounts is the predicate function for accounts builders.
-type Accounts func(*sql.Selector)
+// Account is the predicate function for account builders.
+type Account func(*sql.Selector)
 
 // Txs is the predicate function for txs builders.
 type Txs func(*sql.Selector)

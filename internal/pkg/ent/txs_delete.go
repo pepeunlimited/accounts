@@ -4,12 +4,12 @@ package ent
 
 import (
 	"context"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/predicate"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 
 	"github.com/facebookincubator/ent/dialect/sql"
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
 	"github.com/facebookincubator/ent/schema/field"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/predicate"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 )
 
 // TxsDelete is the builder for deleting a Txs entity.
@@ -70,7 +70,7 @@ func (tdo *TxsDeleteOne) Exec(ctx context.Context) error {
 	case err != nil:
 		return err
 	case n == 0:
-		return &ErrNotFound{txs.Label}
+		return &NotFoundError{txs.Label}
 	default:
 		return nil
 	}

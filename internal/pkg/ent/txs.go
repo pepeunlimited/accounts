@@ -4,11 +4,12 @@ package ent
 
 import (
 	"fmt"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 	"strings"
 	"time"
 
 	"github.com/facebookincubator/ent/dialect/sql"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/account"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 )
 
 // Txs is the model entity for the Txs schema.
@@ -26,11 +27,31 @@ type Txs struct {
 	ReferenceNumber *string `json:"reference_number,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TxsQuery when eager-loading is set.
-	Edges struct {
-		// Accounts holds the value of the accounts edge.
-		Accounts *Accounts
-	} `json:"edges"`
-	accounts_id *int
+	Edges       TxsEdges `json:"edges"`
+	account_txs *int
+}
+
+// TxsEdges holds the relations/edges for other nodes in the graph.
+type TxsEdges struct {
+	// Accounts holds the value of the accounts edge.
+	Accounts *Account
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// AccountsOrErr returns the Accounts value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TxsEdges) AccountsOrErr() (*Account, error) {
+	if e.loadedTypes[0] {
+		if e.Accounts == nil {
+			// The edge accounts was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: account.Label}
+		}
+		return e.Accounts, nil
+	}
+	return nil, &NotLoadedError{edge: "accounts"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -47,7 +68,7 @@ func (*Txs) scanValues() []interface{} {
 // fkValues returns the types for scanning foreign-keys values from sql.Rows.
 func (*Txs) fkValues() []interface{} {
 	return []interface{}{
-		&sql.NullInt64{}, // accounts_id
+		&sql.NullInt64{}, // account_txs
 	}
 }
 
@@ -87,17 +108,17 @@ func (t *Txs) assignValues(values ...interface{}) error {
 	values = values[4:]
 	if len(values) == len(txs.ForeignKeys) {
 		if value, ok := values[0].(*sql.NullInt64); !ok {
-			return fmt.Errorf("unexpected type %T for edge-field accounts_id", value)
+			return fmt.Errorf("unexpected type %T for edge-field account_txs", value)
 		} else if value.Valid {
-			t.accounts_id = new(int)
-			*t.accounts_id = int(value.Int64)
+			t.account_txs = new(int)
+			*t.account_txs = int(value.Int64)
 		}
 	}
 	return nil
 }
 
 // QueryAccounts queries the accounts edge of the Txs.
-func (t *Txs) QueryAccounts() *AccountsQuery {
+func (t *Txs) QueryAccounts() *AccountQuery {
 	return (&TxsClient{t.config}).QueryAccounts(t)
 }
 

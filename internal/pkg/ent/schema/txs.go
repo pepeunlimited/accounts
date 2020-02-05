@@ -26,6 +26,6 @@ func (Txs) Fields() []ent.Field {
 
 func (Txs) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("accounts", Accounts.Type).Ref("txs").Unique(), // many-to-one
+		edge.From("accounts", Account.Type).Ref("txs").Unique(), // many-to-one
 	}
 }

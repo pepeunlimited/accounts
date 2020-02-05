@@ -7,11 +7,11 @@ import (
 )
 
 // OneToMany ´txs´
-type Accounts struct {
+type Account struct {
 	ent.Schema
 }
 
-func (Accounts) Fields() []ent.Field {
+func (Account) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int64("balance"),
 		field.Uint8("version"),
@@ -20,7 +20,7 @@ func (Accounts) Fields() []ent.Field {
 	}
 }
 
-func (Accounts) Edges() []ent.Edge {
+func (Account) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("txs", Txs.Type), // one-to-many
 	}

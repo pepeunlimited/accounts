@@ -6,14 +6,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/accounts"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/predicate"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 	"time"
 
 	"github.com/facebookincubator/ent/dialect/sql"
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
 	"github.com/facebookincubator/ent/schema/field"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/account"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/predicate"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 )
 
 // TxsUpdate is the builder for updating Txs entities.
@@ -86,7 +86,7 @@ func (tu *TxsUpdate) ClearReferenceNumber() *TxsUpdate {
 	return tu
 }
 
-// SetAccountsID sets the accounts edge to Accounts by id.
+// SetAccountsID sets the accounts edge to Account by id.
 func (tu *TxsUpdate) SetAccountsID(id int) *TxsUpdate {
 	if tu.accounts == nil {
 		tu.accounts = make(map[int]struct{})
@@ -95,7 +95,7 @@ func (tu *TxsUpdate) SetAccountsID(id int) *TxsUpdate {
 	return tu
 }
 
-// SetNillableAccountsID sets the accounts edge to Accounts by id if the given value is not nil.
+// SetNillableAccountsID sets the accounts edge to Account by id if the given value is not nil.
 func (tu *TxsUpdate) SetNillableAccountsID(id *int) *TxsUpdate {
 	if id != nil {
 		tu = tu.SetAccountsID(*id)
@@ -103,12 +103,12 @@ func (tu *TxsUpdate) SetNillableAccountsID(id *int) *TxsUpdate {
 	return tu
 }
 
-// SetAccounts sets the accounts edge to Accounts.
-func (tu *TxsUpdate) SetAccounts(a *Accounts) *TxsUpdate {
+// SetAccounts sets the accounts edge to Account.
+func (tu *TxsUpdate) SetAccounts(a *Account) *TxsUpdate {
 	return tu.SetAccountsID(a.ID)
 }
 
-// ClearAccounts clears the accounts edge to Accounts.
+// ClearAccounts clears the accounts edge to Account.
 func (tu *TxsUpdate) ClearAccounts() *TxsUpdate {
 	tu.clearedAccounts = true
 	return tu
@@ -223,7 +223,7 @@ func (tu *TxsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: accounts.FieldID,
+					Column: account.FieldID,
 				},
 			},
 		}
@@ -239,7 +239,7 @@ func (tu *TxsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: accounts.FieldID,
+					Column: account.FieldID,
 				},
 			},
 		}
@@ -321,7 +321,7 @@ func (tuo *TxsUpdateOne) ClearReferenceNumber() *TxsUpdateOne {
 	return tuo
 }
 
-// SetAccountsID sets the accounts edge to Accounts by id.
+// SetAccountsID sets the accounts edge to Account by id.
 func (tuo *TxsUpdateOne) SetAccountsID(id int) *TxsUpdateOne {
 	if tuo.accounts == nil {
 		tuo.accounts = make(map[int]struct{})
@@ -330,7 +330,7 @@ func (tuo *TxsUpdateOne) SetAccountsID(id int) *TxsUpdateOne {
 	return tuo
 }
 
-// SetNillableAccountsID sets the accounts edge to Accounts by id if the given value is not nil.
+// SetNillableAccountsID sets the accounts edge to Account by id if the given value is not nil.
 func (tuo *TxsUpdateOne) SetNillableAccountsID(id *int) *TxsUpdateOne {
 	if id != nil {
 		tuo = tuo.SetAccountsID(*id)
@@ -338,12 +338,12 @@ func (tuo *TxsUpdateOne) SetNillableAccountsID(id *int) *TxsUpdateOne {
 	return tuo
 }
 
-// SetAccounts sets the accounts edge to Accounts.
-func (tuo *TxsUpdateOne) SetAccounts(a *Accounts) *TxsUpdateOne {
+// SetAccounts sets the accounts edge to Account.
+func (tuo *TxsUpdateOne) SetAccounts(a *Account) *TxsUpdateOne {
 	return tuo.SetAccountsID(a.ID)
 }
 
-// ClearAccounts clears the accounts edge to Accounts.
+// ClearAccounts clears the accounts edge to Account.
 func (tuo *TxsUpdateOne) ClearAccounts() *TxsUpdateOne {
 	tuo.clearedAccounts = true
 	return tuo
@@ -452,7 +452,7 @@ func (tuo *TxsUpdateOne) sqlSave(ctx context.Context) (t *Txs, err error) {
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: accounts.FieldID,
+					Column: account.FieldID,
 				},
 			},
 		}
@@ -468,7 +468,7 @@ func (tuo *TxsUpdateOne) sqlSave(ctx context.Context) (t *Txs, err error) {
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: accounts.FieldID,
+					Column: account.FieldID,
 				},
 			},
 		}

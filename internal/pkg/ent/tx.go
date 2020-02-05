@@ -4,16 +4,16 @@ package ent
 
 import (
 	"context"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/migrate"
 
 	"github.com/facebookincubator/ent/dialect"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/migrate"
 )
 
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
-	// Accounts is the client for interacting with the Accounts builders.
-	Accounts *AccountsClient
+	// Account is the client for interacting with the Account builders.
+	Account *AccountClient
 	// Txs is the client for interacting with the Txs builders.
 	Txs *TxsClient
 }
@@ -31,10 +31,10 @@ func (tx *Tx) Rollback() error {
 // Client returns a Client that binds to current transaction.
 func (tx *Tx) Client() *Client {
 	return &Client{
-		config:   tx.config,
-		Schema:   migrate.NewSchema(tx.driver),
-		Accounts: NewAccountsClient(tx.config),
-		Txs:      NewTxsClient(tx.config),
+		config:  tx.config,
+		Schema:  migrate.NewSchema(tx.driver),
+		Account: NewAccountClient(tx.config),
+		Txs:     NewTxsClient(tx.config),
 	}
 }
 
@@ -45,7 +45,7 @@ func (tx *Tx) Client() *Client {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Accounts.QueryXXX(), the query will be executed
+// applies a query, for example: Account.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

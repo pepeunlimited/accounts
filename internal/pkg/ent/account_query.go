@@ -7,24 +7,24 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/accounts"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/predicate"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 	"math"
 
 	"github.com/facebookincubator/ent/dialect/sql"
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
 	"github.com/facebookincubator/ent/schema/field"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/account"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/predicate"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 )
 
-// AccountsQuery is the builder for querying Accounts entities.
-type AccountsQuery struct {
+// AccountQuery is the builder for querying Account entities.
+type AccountQuery struct {
 	config
 	limit      *int
 	offset     *int
 	order      []Order
 	unique     []string
-	predicates []predicate.Accounts
+	predicates []predicate.Account
 	// eager-loading edges.
 	withTxs *TxsQuery
 	// intermediate query.
@@ -32,55 +32,55 @@ type AccountsQuery struct {
 }
 
 // Where adds a new predicate for the builder.
-func (aq *AccountsQuery) Where(ps ...predicate.Accounts) *AccountsQuery {
+func (aq *AccountQuery) Where(ps ...predicate.Account) *AccountQuery {
 	aq.predicates = append(aq.predicates, ps...)
 	return aq
 }
 
 // Limit adds a limit step to the query.
-func (aq *AccountsQuery) Limit(limit int) *AccountsQuery {
+func (aq *AccountQuery) Limit(limit int) *AccountQuery {
 	aq.limit = &limit
 	return aq
 }
 
 // Offset adds an offset step to the query.
-func (aq *AccountsQuery) Offset(offset int) *AccountsQuery {
+func (aq *AccountQuery) Offset(offset int) *AccountQuery {
 	aq.offset = &offset
 	return aq
 }
 
 // Order adds an order step to the query.
-func (aq *AccountsQuery) Order(o ...Order) *AccountsQuery {
+func (aq *AccountQuery) Order(o ...Order) *AccountQuery {
 	aq.order = append(aq.order, o...)
 	return aq
 }
 
 // QueryTxs chains the current query on the txs edge.
-func (aq *AccountsQuery) QueryTxs() *TxsQuery {
+func (aq *AccountQuery) QueryTxs() *TxsQuery {
 	query := &TxsQuery{config: aq.config}
 	step := sqlgraph.NewStep(
-		sqlgraph.From(accounts.Table, accounts.FieldID, aq.sqlQuery()),
+		sqlgraph.From(account.Table, account.FieldID, aq.sqlQuery()),
 		sqlgraph.To(txs.Table, txs.FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, accounts.TxsTable, accounts.TxsColumn),
+		sqlgraph.Edge(sqlgraph.O2M, false, account.TxsTable, account.TxsColumn),
 	)
 	query.sql = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 	return query
 }
 
-// First returns the first Accounts entity in the query. Returns *ErrNotFound when no accounts was found.
-func (aq *AccountsQuery) First(ctx context.Context) (*Accounts, error) {
+// First returns the first Account entity in the query. Returns *NotFoundError when no account was found.
+func (aq *AccountQuery) First(ctx context.Context) (*Account, error) {
 	as, err := aq.Limit(1).All(ctx)
 	if err != nil {
 		return nil, err
 	}
 	if len(as) == 0 {
-		return nil, &ErrNotFound{accounts.Label}
+		return nil, &NotFoundError{account.Label}
 	}
 	return as[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (aq *AccountsQuery) FirstX(ctx context.Context) *Accounts {
+func (aq *AccountQuery) FirstX(ctx context.Context) *Account {
 	a, err := aq.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -88,21 +88,21 @@ func (aq *AccountsQuery) FirstX(ctx context.Context) *Accounts {
 	return a
 }
 
-// FirstID returns the first Accounts id in the query. Returns *ErrNotFound when no id was found.
-func (aq *AccountsQuery) FirstID(ctx context.Context) (id int, err error) {
+// FirstID returns the first Account id in the query. Returns *NotFoundError when no id was found.
+func (aq *AccountQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = aq.Limit(1).IDs(ctx); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &ErrNotFound{accounts.Label}
+		err = &NotFoundError{account.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstXID is like FirstID, but panics if an error occurs.
-func (aq *AccountsQuery) FirstXID(ctx context.Context) int {
+func (aq *AccountQuery) FirstXID(ctx context.Context) int {
 	id, err := aq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -110,8 +110,8 @@ func (aq *AccountsQuery) FirstXID(ctx context.Context) int {
 	return id
 }
 
-// Only returns the only Accounts entity in the query, returns an error if not exactly one entity was returned.
-func (aq *AccountsQuery) Only(ctx context.Context) (*Accounts, error) {
+// Only returns the only Account entity in the query, returns an error if not exactly one entity was returned.
+func (aq *AccountQuery) Only(ctx context.Context) (*Account, error) {
 	as, err := aq.Limit(2).All(ctx)
 	if err != nil {
 		return nil, err
@@ -120,14 +120,14 @@ func (aq *AccountsQuery) Only(ctx context.Context) (*Accounts, error) {
 	case 1:
 		return as[0], nil
 	case 0:
-		return nil, &ErrNotFound{accounts.Label}
+		return nil, &NotFoundError{account.Label}
 	default:
-		return nil, &ErrNotSingular{accounts.Label}
+		return nil, &NotSingularError{account.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (aq *AccountsQuery) OnlyX(ctx context.Context) *Accounts {
+func (aq *AccountQuery) OnlyX(ctx context.Context) *Account {
 	a, err := aq.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -135,8 +135,8 @@ func (aq *AccountsQuery) OnlyX(ctx context.Context) *Accounts {
 	return a
 }
 
-// OnlyID returns the only Accounts id in the query, returns an error if not exactly one id was returned.
-func (aq *AccountsQuery) OnlyID(ctx context.Context) (id int, err error) {
+// OnlyID returns the only Account id in the query, returns an error if not exactly one id was returned.
+func (aq *AccountQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = aq.Limit(2).IDs(ctx); err != nil {
 		return
@@ -145,15 +145,15 @@ func (aq *AccountsQuery) OnlyID(ctx context.Context) (id int, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &ErrNotFound{accounts.Label}
+		err = &NotFoundError{account.Label}
 	default:
-		err = &ErrNotSingular{accounts.Label}
+		err = &NotSingularError{account.Label}
 	}
 	return
 }
 
 // OnlyXID is like OnlyID, but panics if an error occurs.
-func (aq *AccountsQuery) OnlyXID(ctx context.Context) int {
+func (aq *AccountQuery) OnlyXID(ctx context.Context) int {
 	id, err := aq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -161,13 +161,13 @@ func (aq *AccountsQuery) OnlyXID(ctx context.Context) int {
 	return id
 }
 
-// All executes the query and returns a list of AccountsSlice.
-func (aq *AccountsQuery) All(ctx context.Context) ([]*Accounts, error) {
+// All executes the query and returns a list of Accounts.
+func (aq *AccountQuery) All(ctx context.Context) ([]*Account, error) {
 	return aq.sqlAll(ctx)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (aq *AccountsQuery) AllX(ctx context.Context) []*Accounts {
+func (aq *AccountQuery) AllX(ctx context.Context) []*Account {
 	as, err := aq.All(ctx)
 	if err != nil {
 		panic(err)
@@ -175,17 +175,17 @@ func (aq *AccountsQuery) AllX(ctx context.Context) []*Accounts {
 	return as
 }
 
-// IDs executes the query and returns a list of Accounts ids.
-func (aq *AccountsQuery) IDs(ctx context.Context) ([]int, error) {
+// IDs executes the query and returns a list of Account ids.
+func (aq *AccountQuery) IDs(ctx context.Context) ([]int, error) {
 	var ids []int
-	if err := aq.Select(accounts.FieldID).Scan(ctx, &ids); err != nil {
+	if err := aq.Select(account.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (aq *AccountsQuery) IDsX(ctx context.Context) []int {
+func (aq *AccountQuery) IDsX(ctx context.Context) []int {
 	ids, err := aq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -194,12 +194,12 @@ func (aq *AccountsQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (aq *AccountsQuery) Count(ctx context.Context) (int, error) {
+func (aq *AccountQuery) Count(ctx context.Context) (int, error) {
 	return aq.sqlCount(ctx)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (aq *AccountsQuery) CountX(ctx context.Context) int {
+func (aq *AccountQuery) CountX(ctx context.Context) int {
 	count, err := aq.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -208,12 +208,12 @@ func (aq *AccountsQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (aq *AccountsQuery) Exist(ctx context.Context) (bool, error) {
+func (aq *AccountQuery) Exist(ctx context.Context) (bool, error) {
 	return aq.sqlExist(ctx)
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (aq *AccountsQuery) ExistX(ctx context.Context) bool {
+func (aq *AccountQuery) ExistX(ctx context.Context) bool {
 	exist, err := aq.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -223,14 +223,14 @@ func (aq *AccountsQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the query builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (aq *AccountsQuery) Clone() *AccountsQuery {
-	return &AccountsQuery{
+func (aq *AccountQuery) Clone() *AccountQuery {
+	return &AccountQuery{
 		config:     aq.config,
 		limit:      aq.limit,
 		offset:     aq.offset,
 		order:      append([]Order{}, aq.order...),
 		unique:     append([]string{}, aq.unique...),
-		predicates: append([]predicate.Accounts{}, aq.predicates...),
+		predicates: append([]predicate.Account{}, aq.predicates...),
 		// clone intermediate query.
 		sql: aq.sql.Clone(),
 	}
@@ -238,7 +238,7 @@ func (aq *AccountsQuery) Clone() *AccountsQuery {
 
 //  WithTxs tells the query-builder to eager-loads the nodes that are connected to
 // the "txs" edge. The optional arguments used to configure the query builder of the edge.
-func (aq *AccountsQuery) WithTxs(opts ...func(*TxsQuery)) *AccountsQuery {
+func (aq *AccountQuery) WithTxs(opts ...func(*TxsQuery)) *AccountQuery {
 	query := &TxsQuery{config: aq.config}
 	for _, opt := range opts {
 		opt(query)
@@ -257,13 +257,13 @@ func (aq *AccountsQuery) WithTxs(opts ...func(*TxsQuery)) *AccountsQuery {
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.Accounts.Query().
-//		GroupBy(accounts.FieldBalance).
+//	client.Account.Query().
+//		GroupBy(account.FieldBalance).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
-func (aq *AccountsQuery) GroupBy(field string, fields ...string) *AccountsGroupBy {
-	group := &AccountsGroupBy{config: aq.config}
+func (aq *AccountQuery) GroupBy(field string, fields ...string) *AccountGroupBy {
+	group := &AccountGroupBy{config: aq.config}
 	group.fields = append([]string{field}, fields...)
 	group.sql = aq.sqlQuery()
 	return group
@@ -277,24 +277,27 @@ func (aq *AccountsQuery) GroupBy(field string, fields ...string) *AccountsGroupB
 //		Balance int64 `json:"balance,omitempty"`
 //	}
 //
-//	client.Accounts.Query().
-//		Select(accounts.FieldBalance).
+//	client.Account.Query().
+//		Select(account.FieldBalance).
 //		Scan(ctx, &v)
 //
-func (aq *AccountsQuery) Select(field string, fields ...string) *AccountsSelect {
-	selector := &AccountsSelect{config: aq.config}
+func (aq *AccountQuery) Select(field string, fields ...string) *AccountSelect {
+	selector := &AccountSelect{config: aq.config}
 	selector.fields = append([]string{field}, fields...)
 	selector.sql = aq.sqlQuery()
 	return selector
 }
 
-func (aq *AccountsQuery) sqlAll(ctx context.Context) ([]*Accounts, error) {
+func (aq *AccountQuery) sqlAll(ctx context.Context) ([]*Account, error) {
 	var (
-		nodes []*Accounts
-		_spec = aq.querySpec()
+		nodes       = []*Account{}
+		_spec       = aq.querySpec()
+		loadedTypes = [1]bool{
+			aq.withTxs != nil,
+		}
 	)
 	_spec.ScanValues = func() []interface{} {
-		node := &Accounts{config: aq.config}
+		node := &Account{config: aq.config}
 		nodes = append(nodes, node)
 		values := node.scanValues()
 		return values
@@ -304,6 +307,7 @@ func (aq *AccountsQuery) sqlAll(ctx context.Context) ([]*Accounts, error) {
 			return fmt.Errorf("ent: Assign called without calling ScanValues")
 		}
 		node := nodes[len(nodes)-1]
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(values...)
 	}
 	if err := sqlgraph.QueryNodes(ctx, aq.driver, _spec); err != nil {
@@ -315,27 +319,27 @@ func (aq *AccountsQuery) sqlAll(ctx context.Context) ([]*Accounts, error) {
 
 	if query := aq.withTxs; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
-		nodeids := make(map[int]*Accounts)
+		nodeids := make(map[int]*Account)
 		for i := range nodes {
 			fks = append(fks, nodes[i].ID)
 			nodeids[nodes[i].ID] = nodes[i]
 		}
 		query.withFKs = true
 		query.Where(predicate.Txs(func(s *sql.Selector) {
-			s.Where(sql.InValues(accounts.TxsColumn, fks...))
+			s.Where(sql.InValues(account.TxsColumn, fks...))
 		}))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			fk := n.accounts_id
+			fk := n.account_txs
 			if fk == nil {
-				return nil, fmt.Errorf(`foreign-key "accounts_id" is nil for node %v`, n.ID)
+				return nil, fmt.Errorf(`foreign-key "account_txs" is nil for node %v`, n.ID)
 			}
 			node, ok := nodeids[*fk]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "accounts_id" returned %v for node %v`, *fk, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "account_txs" returned %v for node %v`, *fk, n.ID)
 			}
 			node.Edges.Txs = append(node.Edges.Txs, n)
 		}
@@ -344,12 +348,12 @@ func (aq *AccountsQuery) sqlAll(ctx context.Context) ([]*Accounts, error) {
 	return nodes, nil
 }
 
-func (aq *AccountsQuery) sqlCount(ctx context.Context) (int, error) {
+func (aq *AccountQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := aq.querySpec()
 	return sqlgraph.CountNodes(ctx, aq.driver, _spec)
 }
 
-func (aq *AccountsQuery) sqlExist(ctx context.Context) (bool, error) {
+func (aq *AccountQuery) sqlExist(ctx context.Context) (bool, error) {
 	n, err := aq.sqlCount(ctx)
 	if err != nil {
 		return false, fmt.Errorf("ent: check existence: %v", err)
@@ -357,14 +361,14 @@ func (aq *AccountsQuery) sqlExist(ctx context.Context) (bool, error) {
 	return n > 0, nil
 }
 
-func (aq *AccountsQuery) querySpec() *sqlgraph.QuerySpec {
+func (aq *AccountQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := &sqlgraph.QuerySpec{
 		Node: &sqlgraph.NodeSpec{
-			Table:   accounts.Table,
-			Columns: accounts.Columns,
+			Table:   account.Table,
+			Columns: account.Columns,
 			ID: &sqlgraph.FieldSpec{
 				Type:   field.TypeInt,
-				Column: accounts.FieldID,
+				Column: account.FieldID,
 			},
 		},
 		From:   aq.sql,
@@ -393,13 +397,13 @@ func (aq *AccountsQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (aq *AccountsQuery) sqlQuery() *sql.Selector {
+func (aq *AccountQuery) sqlQuery() *sql.Selector {
 	builder := sql.Dialect(aq.driver.Dialect())
-	t1 := builder.Table(accounts.Table)
-	selector := builder.Select(t1.Columns(accounts.Columns...)...).From(t1)
+	t1 := builder.Table(account.Table)
+	selector := builder.Select(t1.Columns(account.Columns...)...).From(t1)
 	if aq.sql != nil {
 		selector = aq.sql
-		selector.Select(selector.Columns(accounts.Columns...)...)
+		selector.Select(selector.Columns(account.Columns...)...)
 	}
 	for _, p := range aq.predicates {
 		p(selector)
@@ -418,8 +422,8 @@ func (aq *AccountsQuery) sqlQuery() *sql.Selector {
 	return selector
 }
 
-// AccountsGroupBy is the builder for group-by Accounts entities.
-type AccountsGroupBy struct {
+// AccountGroupBy is the builder for group-by Account entities.
+type AccountGroupBy struct {
 	config
 	fields []string
 	fns    []Aggregate
@@ -428,27 +432,27 @@ type AccountsGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (agb *AccountsGroupBy) Aggregate(fns ...Aggregate) *AccountsGroupBy {
+func (agb *AccountGroupBy) Aggregate(fns ...Aggregate) *AccountGroupBy {
 	agb.fns = append(agb.fns, fns...)
 	return agb
 }
 
 // Scan applies the group-by query and scan the result into the given value.
-func (agb *AccountsGroupBy) Scan(ctx context.Context, v interface{}) error {
+func (agb *AccountGroupBy) Scan(ctx context.Context, v interface{}) error {
 	return agb.sqlScan(ctx, v)
 }
 
 // ScanX is like Scan, but panics if an error occurs.
-func (agb *AccountsGroupBy) ScanX(ctx context.Context, v interface{}) {
+func (agb *AccountGroupBy) ScanX(ctx context.Context, v interface{}) {
 	if err := agb.Scan(ctx, v); err != nil {
 		panic(err)
 	}
 }
 
 // Strings returns list of strings from group-by. It is only allowed when querying group-by with one field.
-func (agb *AccountsGroupBy) Strings(ctx context.Context) ([]string, error) {
+func (agb *AccountGroupBy) Strings(ctx context.Context) ([]string, error) {
 	if len(agb.fields) > 1 {
-		return nil, errors.New("ent: AccountsGroupBy.Strings is not achievable when grouping more than 1 field")
+		return nil, errors.New("ent: AccountGroupBy.Strings is not achievable when grouping more than 1 field")
 	}
 	var v []string
 	if err := agb.Scan(ctx, &v); err != nil {
@@ -458,7 +462,7 @@ func (agb *AccountsGroupBy) Strings(ctx context.Context) ([]string, error) {
 }
 
 // StringsX is like Strings, but panics if an error occurs.
-func (agb *AccountsGroupBy) StringsX(ctx context.Context) []string {
+func (agb *AccountGroupBy) StringsX(ctx context.Context) []string {
 	v, err := agb.Strings(ctx)
 	if err != nil {
 		panic(err)
@@ -467,9 +471,9 @@ func (agb *AccountsGroupBy) StringsX(ctx context.Context) []string {
 }
 
 // Ints returns list of ints from group-by. It is only allowed when querying group-by with one field.
-func (agb *AccountsGroupBy) Ints(ctx context.Context) ([]int, error) {
+func (agb *AccountGroupBy) Ints(ctx context.Context) ([]int, error) {
 	if len(agb.fields) > 1 {
-		return nil, errors.New("ent: AccountsGroupBy.Ints is not achievable when grouping more than 1 field")
+		return nil, errors.New("ent: AccountGroupBy.Ints is not achievable when grouping more than 1 field")
 	}
 	var v []int
 	if err := agb.Scan(ctx, &v); err != nil {
@@ -479,7 +483,7 @@ func (agb *AccountsGroupBy) Ints(ctx context.Context) ([]int, error) {
 }
 
 // IntsX is like Ints, but panics if an error occurs.
-func (agb *AccountsGroupBy) IntsX(ctx context.Context) []int {
+func (agb *AccountGroupBy) IntsX(ctx context.Context) []int {
 	v, err := agb.Ints(ctx)
 	if err != nil {
 		panic(err)
@@ -488,9 +492,9 @@ func (agb *AccountsGroupBy) IntsX(ctx context.Context) []int {
 }
 
 // Float64s returns list of float64s from group-by. It is only allowed when querying group-by with one field.
-func (agb *AccountsGroupBy) Float64s(ctx context.Context) ([]float64, error) {
+func (agb *AccountGroupBy) Float64s(ctx context.Context) ([]float64, error) {
 	if len(agb.fields) > 1 {
-		return nil, errors.New("ent: AccountsGroupBy.Float64s is not achievable when grouping more than 1 field")
+		return nil, errors.New("ent: AccountGroupBy.Float64s is not achievable when grouping more than 1 field")
 	}
 	var v []float64
 	if err := agb.Scan(ctx, &v); err != nil {
@@ -500,7 +504,7 @@ func (agb *AccountsGroupBy) Float64s(ctx context.Context) ([]float64, error) {
 }
 
 // Float64sX is like Float64s, but panics if an error occurs.
-func (agb *AccountsGroupBy) Float64sX(ctx context.Context) []float64 {
+func (agb *AccountGroupBy) Float64sX(ctx context.Context) []float64 {
 	v, err := agb.Float64s(ctx)
 	if err != nil {
 		panic(err)
@@ -509,9 +513,9 @@ func (agb *AccountsGroupBy) Float64sX(ctx context.Context) []float64 {
 }
 
 // Bools returns list of bools from group-by. It is only allowed when querying group-by with one field.
-func (agb *AccountsGroupBy) Bools(ctx context.Context) ([]bool, error) {
+func (agb *AccountGroupBy) Bools(ctx context.Context) ([]bool, error) {
 	if len(agb.fields) > 1 {
-		return nil, errors.New("ent: AccountsGroupBy.Bools is not achievable when grouping more than 1 field")
+		return nil, errors.New("ent: AccountGroupBy.Bools is not achievable when grouping more than 1 field")
 	}
 	var v []bool
 	if err := agb.Scan(ctx, &v); err != nil {
@@ -521,7 +525,7 @@ func (agb *AccountsGroupBy) Bools(ctx context.Context) ([]bool, error) {
 }
 
 // BoolsX is like Bools, but panics if an error occurs.
-func (agb *AccountsGroupBy) BoolsX(ctx context.Context) []bool {
+func (agb *AccountGroupBy) BoolsX(ctx context.Context) []bool {
 	v, err := agb.Bools(ctx)
 	if err != nil {
 		panic(err)
@@ -529,7 +533,7 @@ func (agb *AccountsGroupBy) BoolsX(ctx context.Context) []bool {
 	return v
 }
 
-func (agb *AccountsGroupBy) sqlScan(ctx context.Context, v interface{}) error {
+func (agb *AccountGroupBy) sqlScan(ctx context.Context, v interface{}) error {
 	rows := &sql.Rows{}
 	query, args := agb.sqlQuery().Query()
 	if err := agb.driver.Query(ctx, query, args, rows); err != nil {
@@ -539,7 +543,7 @@ func (agb *AccountsGroupBy) sqlScan(ctx context.Context, v interface{}) error {
 	return sql.ScanSlice(rows, v)
 }
 
-func (agb *AccountsGroupBy) sqlQuery() *sql.Selector {
+func (agb *AccountGroupBy) sqlQuery() *sql.Selector {
 	selector := agb.sql
 	columns := make([]string, 0, len(agb.fields)+len(agb.fns))
 	columns = append(columns, agb.fields...)
@@ -549,8 +553,8 @@ func (agb *AccountsGroupBy) sqlQuery() *sql.Selector {
 	return selector.Select(columns...).GroupBy(agb.fields...)
 }
 
-// AccountsSelect is the builder for select fields of Accounts entities.
-type AccountsSelect struct {
+// AccountSelect is the builder for select fields of Account entities.
+type AccountSelect struct {
 	config
 	fields []string
 	// intermediate queries.
@@ -558,21 +562,21 @@ type AccountsSelect struct {
 }
 
 // Scan applies the selector query and scan the result into the given value.
-func (as *AccountsSelect) Scan(ctx context.Context, v interface{}) error {
+func (as *AccountSelect) Scan(ctx context.Context, v interface{}) error {
 	return as.sqlScan(ctx, v)
 }
 
 // ScanX is like Scan, but panics if an error occurs.
-func (as *AccountsSelect) ScanX(ctx context.Context, v interface{}) {
+func (as *AccountSelect) ScanX(ctx context.Context, v interface{}) {
 	if err := as.Scan(ctx, v); err != nil {
 		panic(err)
 	}
 }
 
 // Strings returns list of strings from selector. It is only allowed when selecting one field.
-func (as *AccountsSelect) Strings(ctx context.Context) ([]string, error) {
+func (as *AccountSelect) Strings(ctx context.Context) ([]string, error) {
 	if len(as.fields) > 1 {
-		return nil, errors.New("ent: AccountsSelect.Strings is not achievable when selecting more than 1 field")
+		return nil, errors.New("ent: AccountSelect.Strings is not achievable when selecting more than 1 field")
 	}
 	var v []string
 	if err := as.Scan(ctx, &v); err != nil {
@@ -582,7 +586,7 @@ func (as *AccountsSelect) Strings(ctx context.Context) ([]string, error) {
 }
 
 // StringsX is like Strings, but panics if an error occurs.
-func (as *AccountsSelect) StringsX(ctx context.Context) []string {
+func (as *AccountSelect) StringsX(ctx context.Context) []string {
 	v, err := as.Strings(ctx)
 	if err != nil {
 		panic(err)
@@ -591,9 +595,9 @@ func (as *AccountsSelect) StringsX(ctx context.Context) []string {
 }
 
 // Ints returns list of ints from selector. It is only allowed when selecting one field.
-func (as *AccountsSelect) Ints(ctx context.Context) ([]int, error) {
+func (as *AccountSelect) Ints(ctx context.Context) ([]int, error) {
 	if len(as.fields) > 1 {
-		return nil, errors.New("ent: AccountsSelect.Ints is not achievable when selecting more than 1 field")
+		return nil, errors.New("ent: AccountSelect.Ints is not achievable when selecting more than 1 field")
 	}
 	var v []int
 	if err := as.Scan(ctx, &v); err != nil {
@@ -603,7 +607,7 @@ func (as *AccountsSelect) Ints(ctx context.Context) ([]int, error) {
 }
 
 // IntsX is like Ints, but panics if an error occurs.
-func (as *AccountsSelect) IntsX(ctx context.Context) []int {
+func (as *AccountSelect) IntsX(ctx context.Context) []int {
 	v, err := as.Ints(ctx)
 	if err != nil {
 		panic(err)
@@ -612,9 +616,9 @@ func (as *AccountsSelect) IntsX(ctx context.Context) []int {
 }
 
 // Float64s returns list of float64s from selector. It is only allowed when selecting one field.
-func (as *AccountsSelect) Float64s(ctx context.Context) ([]float64, error) {
+func (as *AccountSelect) Float64s(ctx context.Context) ([]float64, error) {
 	if len(as.fields) > 1 {
-		return nil, errors.New("ent: AccountsSelect.Float64s is not achievable when selecting more than 1 field")
+		return nil, errors.New("ent: AccountSelect.Float64s is not achievable when selecting more than 1 field")
 	}
 	var v []float64
 	if err := as.Scan(ctx, &v); err != nil {
@@ -624,7 +628,7 @@ func (as *AccountsSelect) Float64s(ctx context.Context) ([]float64, error) {
 }
 
 // Float64sX is like Float64s, but panics if an error occurs.
-func (as *AccountsSelect) Float64sX(ctx context.Context) []float64 {
+func (as *AccountSelect) Float64sX(ctx context.Context) []float64 {
 	v, err := as.Float64s(ctx)
 	if err != nil {
 		panic(err)
@@ -633,9 +637,9 @@ func (as *AccountsSelect) Float64sX(ctx context.Context) []float64 {
 }
 
 // Bools returns list of bools from selector. It is only allowed when selecting one field.
-func (as *AccountsSelect) Bools(ctx context.Context) ([]bool, error) {
+func (as *AccountSelect) Bools(ctx context.Context) ([]bool, error) {
 	if len(as.fields) > 1 {
-		return nil, errors.New("ent: AccountsSelect.Bools is not achievable when selecting more than 1 field")
+		return nil, errors.New("ent: AccountSelect.Bools is not achievable when selecting more than 1 field")
 	}
 	var v []bool
 	if err := as.Scan(ctx, &v); err != nil {
@@ -645,7 +649,7 @@ func (as *AccountsSelect) Bools(ctx context.Context) ([]bool, error) {
 }
 
 // BoolsX is like Bools, but panics if an error occurs.
-func (as *AccountsSelect) BoolsX(ctx context.Context) []bool {
+func (as *AccountSelect) BoolsX(ctx context.Context) []bool {
 	v, err := as.Bools(ctx)
 	if err != nil {
 		panic(err)
@@ -653,7 +657,7 @@ func (as *AccountsSelect) BoolsX(ctx context.Context) []bool {
 	return v
 }
 
-func (as *AccountsSelect) sqlScan(ctx context.Context, v interface{}) error {
+func (as *AccountSelect) sqlScan(ctx context.Context, v interface{}) error {
 	rows := &sql.Rows{}
 	query, args := as.sqlQuery().Query()
 	if err := as.driver.Query(ctx, query, args, rows); err != nil {
@@ -663,7 +667,7 @@ func (as *AccountsSelect) sqlScan(ctx context.Context, v interface{}) error {
 	return sql.ScanSlice(rows, v)
 }
 
-func (as *AccountsSelect) sqlQuery() sql.Querier {
+func (as *AccountSelect) sqlQuery() sql.Querier {
 	selector := as.sql
 	selector.Select(selector.Columns(as.fields...)...)
 	return selector

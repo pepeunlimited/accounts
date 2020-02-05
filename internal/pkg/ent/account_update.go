@@ -4,17 +4,17 @@ package ent
 
 import (
 	"context"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/accounts"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/predicate"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 
 	"github.com/facebookincubator/ent/dialect/sql"
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
 	"github.com/facebookincubator/ent/schema/field"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/account"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/predicate"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 )
 
-// AccountsUpdate is the builder for updating Accounts entities.
-type AccountsUpdate struct {
+// AccountUpdate is the builder for updating Account entities.
+type AccountUpdate struct {
 	config
 	balance     *int64
 	addbalance  *int64
@@ -25,24 +25,24 @@ type AccountsUpdate struct {
 	adduser_id  *int64
 	txs         map[int]struct{}
 	removedTxs  map[int]struct{}
-	predicates  []predicate.Accounts
+	predicates  []predicate.Account
 }
 
 // Where adds a new predicate for the builder.
-func (au *AccountsUpdate) Where(ps ...predicate.Accounts) *AccountsUpdate {
+func (au *AccountUpdate) Where(ps ...predicate.Account) *AccountUpdate {
 	au.predicates = append(au.predicates, ps...)
 	return au
 }
 
 // SetBalance sets the balance field.
-func (au *AccountsUpdate) SetBalance(i int64) *AccountsUpdate {
+func (au *AccountUpdate) SetBalance(i int64) *AccountUpdate {
 	au.balance = &i
 	au.addbalance = nil
 	return au
 }
 
 // AddBalance adds i to balance.
-func (au *AccountsUpdate) AddBalance(i int64) *AccountsUpdate {
+func (au *AccountUpdate) AddBalance(i int64) *AccountUpdate {
 	if au.addbalance == nil {
 		au.addbalance = &i
 	} else {
@@ -52,14 +52,14 @@ func (au *AccountsUpdate) AddBalance(i int64) *AccountsUpdate {
 }
 
 // SetVersion sets the version field.
-func (au *AccountsUpdate) SetVersion(u uint8) *AccountsUpdate {
+func (au *AccountUpdate) SetVersion(u uint8) *AccountUpdate {
 	au.version = &u
 	au.addversion = nil
 	return au
 }
 
 // AddVersion adds u to version.
-func (au *AccountsUpdate) AddVersion(u uint8) *AccountsUpdate {
+func (au *AccountUpdate) AddVersion(u uint8) *AccountUpdate {
 	if au.addversion == nil {
 		au.addversion = &u
 	} else {
@@ -69,20 +69,20 @@ func (au *AccountsUpdate) AddVersion(u uint8) *AccountsUpdate {
 }
 
 // SetIsVerified sets the is_verified field.
-func (au *AccountsUpdate) SetIsVerified(b bool) *AccountsUpdate {
+func (au *AccountUpdate) SetIsVerified(b bool) *AccountUpdate {
 	au.is_verified = &b
 	return au
 }
 
 // SetUserID sets the user_id field.
-func (au *AccountsUpdate) SetUserID(i int64) *AccountsUpdate {
+func (au *AccountUpdate) SetUserID(i int64) *AccountUpdate {
 	au.user_id = &i
 	au.adduser_id = nil
 	return au
 }
 
 // AddUserID adds i to user_id.
-func (au *AccountsUpdate) AddUserID(i int64) *AccountsUpdate {
+func (au *AccountUpdate) AddUserID(i int64) *AccountUpdate {
 	if au.adduser_id == nil {
 		au.adduser_id = &i
 	} else {
@@ -92,7 +92,7 @@ func (au *AccountsUpdate) AddUserID(i int64) *AccountsUpdate {
 }
 
 // AddTxIDs adds the txs edge to Txs by ids.
-func (au *AccountsUpdate) AddTxIDs(ids ...int) *AccountsUpdate {
+func (au *AccountUpdate) AddTxIDs(ids ...int) *AccountUpdate {
 	if au.txs == nil {
 		au.txs = make(map[int]struct{})
 	}
@@ -103,7 +103,7 @@ func (au *AccountsUpdate) AddTxIDs(ids ...int) *AccountsUpdate {
 }
 
 // AddTxs adds the txs edges to Txs.
-func (au *AccountsUpdate) AddTxs(t ...*Txs) *AccountsUpdate {
+func (au *AccountUpdate) AddTxs(t ...*Txs) *AccountUpdate {
 	ids := make([]int, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
@@ -112,7 +112,7 @@ func (au *AccountsUpdate) AddTxs(t ...*Txs) *AccountsUpdate {
 }
 
 // RemoveTxIDs removes the txs edge to Txs by ids.
-func (au *AccountsUpdate) RemoveTxIDs(ids ...int) *AccountsUpdate {
+func (au *AccountUpdate) RemoveTxIDs(ids ...int) *AccountUpdate {
 	if au.removedTxs == nil {
 		au.removedTxs = make(map[int]struct{})
 	}
@@ -123,7 +123,7 @@ func (au *AccountsUpdate) RemoveTxIDs(ids ...int) *AccountsUpdate {
 }
 
 // RemoveTxs removes txs edges to Txs.
-func (au *AccountsUpdate) RemoveTxs(t ...*Txs) *AccountsUpdate {
+func (au *AccountUpdate) RemoveTxs(t ...*Txs) *AccountUpdate {
 	ids := make([]int, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
@@ -132,12 +132,12 @@ func (au *AccountsUpdate) RemoveTxs(t ...*Txs) *AccountsUpdate {
 }
 
 // Save executes the query and returns the number of rows/vertices matched by this operation.
-func (au *AccountsUpdate) Save(ctx context.Context) (int, error) {
+func (au *AccountUpdate) Save(ctx context.Context) (int, error) {
 	return au.sqlSave(ctx)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (au *AccountsUpdate) SaveX(ctx context.Context) int {
+func (au *AccountUpdate) SaveX(ctx context.Context) int {
 	affected, err := au.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -146,26 +146,26 @@ func (au *AccountsUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (au *AccountsUpdate) Exec(ctx context.Context) error {
+func (au *AccountUpdate) Exec(ctx context.Context) error {
 	_, err := au.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (au *AccountsUpdate) ExecX(ctx context.Context) {
+func (au *AccountUpdate) ExecX(ctx context.Context) {
 	if err := au.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
-func (au *AccountsUpdate) sqlSave(ctx context.Context) (n int, err error) {
+func (au *AccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
-			Table:   accounts.Table,
-			Columns: accounts.Columns,
+			Table:   account.Table,
+			Columns: account.Columns,
 			ID: &sqlgraph.FieldSpec{
 				Type:   field.TypeInt,
-				Column: accounts.FieldID,
+				Column: account.FieldID,
 			},
 		},
 	}
@@ -180,57 +180,57 @@ func (au *AccountsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
-			Column: accounts.FieldBalance,
+			Column: account.FieldBalance,
 		})
 	}
 	if value := au.addbalance; value != nil {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
-			Column: accounts.FieldBalance,
+			Column: account.FieldBalance,
 		})
 	}
 	if value := au.version; value != nil {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeUint8,
 			Value:  *value,
-			Column: accounts.FieldVersion,
+			Column: account.FieldVersion,
 		})
 	}
 	if value := au.addversion; value != nil {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeUint8,
 			Value:  *value,
-			Column: accounts.FieldVersion,
+			Column: account.FieldVersion,
 		})
 	}
 	if value := au.is_verified; value != nil {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
 			Value:  *value,
-			Column: accounts.FieldIsVerified,
+			Column: account.FieldIsVerified,
 		})
 	}
 	if value := au.user_id; value != nil {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
-			Column: accounts.FieldUserID,
+			Column: account.FieldUserID,
 		})
 	}
 	if value := au.adduser_id; value != nil {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
-			Column: accounts.FieldUserID,
+			Column: account.FieldUserID,
 		})
 	}
 	if nodes := au.removedTxs; len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   accounts.TxsTable,
-			Columns: []string{accounts.TxsColumn},
+			Table:   account.TxsTable,
+			Columns: []string{account.TxsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -248,8 +248,8 @@ func (au *AccountsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   accounts.TxsTable,
-			Columns: []string{accounts.TxsColumn},
+			Table:   account.TxsTable,
+			Columns: []string{account.TxsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -272,8 +272,8 @@ func (au *AccountsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	return n, nil
 }
 
-// AccountsUpdateOne is the builder for updating a single Accounts entity.
-type AccountsUpdateOne struct {
+// AccountUpdateOne is the builder for updating a single Account entity.
+type AccountUpdateOne struct {
 	config
 	id          int
 	balance     *int64
@@ -288,14 +288,14 @@ type AccountsUpdateOne struct {
 }
 
 // SetBalance sets the balance field.
-func (auo *AccountsUpdateOne) SetBalance(i int64) *AccountsUpdateOne {
+func (auo *AccountUpdateOne) SetBalance(i int64) *AccountUpdateOne {
 	auo.balance = &i
 	auo.addbalance = nil
 	return auo
 }
 
 // AddBalance adds i to balance.
-func (auo *AccountsUpdateOne) AddBalance(i int64) *AccountsUpdateOne {
+func (auo *AccountUpdateOne) AddBalance(i int64) *AccountUpdateOne {
 	if auo.addbalance == nil {
 		auo.addbalance = &i
 	} else {
@@ -305,14 +305,14 @@ func (auo *AccountsUpdateOne) AddBalance(i int64) *AccountsUpdateOne {
 }
 
 // SetVersion sets the version field.
-func (auo *AccountsUpdateOne) SetVersion(u uint8) *AccountsUpdateOne {
+func (auo *AccountUpdateOne) SetVersion(u uint8) *AccountUpdateOne {
 	auo.version = &u
 	auo.addversion = nil
 	return auo
 }
 
 // AddVersion adds u to version.
-func (auo *AccountsUpdateOne) AddVersion(u uint8) *AccountsUpdateOne {
+func (auo *AccountUpdateOne) AddVersion(u uint8) *AccountUpdateOne {
 	if auo.addversion == nil {
 		auo.addversion = &u
 	} else {
@@ -322,20 +322,20 @@ func (auo *AccountsUpdateOne) AddVersion(u uint8) *AccountsUpdateOne {
 }
 
 // SetIsVerified sets the is_verified field.
-func (auo *AccountsUpdateOne) SetIsVerified(b bool) *AccountsUpdateOne {
+func (auo *AccountUpdateOne) SetIsVerified(b bool) *AccountUpdateOne {
 	auo.is_verified = &b
 	return auo
 }
 
 // SetUserID sets the user_id field.
-func (auo *AccountsUpdateOne) SetUserID(i int64) *AccountsUpdateOne {
+func (auo *AccountUpdateOne) SetUserID(i int64) *AccountUpdateOne {
 	auo.user_id = &i
 	auo.adduser_id = nil
 	return auo
 }
 
 // AddUserID adds i to user_id.
-func (auo *AccountsUpdateOne) AddUserID(i int64) *AccountsUpdateOne {
+func (auo *AccountUpdateOne) AddUserID(i int64) *AccountUpdateOne {
 	if auo.adduser_id == nil {
 		auo.adduser_id = &i
 	} else {
@@ -345,7 +345,7 @@ func (auo *AccountsUpdateOne) AddUserID(i int64) *AccountsUpdateOne {
 }
 
 // AddTxIDs adds the txs edge to Txs by ids.
-func (auo *AccountsUpdateOne) AddTxIDs(ids ...int) *AccountsUpdateOne {
+func (auo *AccountUpdateOne) AddTxIDs(ids ...int) *AccountUpdateOne {
 	if auo.txs == nil {
 		auo.txs = make(map[int]struct{})
 	}
@@ -356,7 +356,7 @@ func (auo *AccountsUpdateOne) AddTxIDs(ids ...int) *AccountsUpdateOne {
 }
 
 // AddTxs adds the txs edges to Txs.
-func (auo *AccountsUpdateOne) AddTxs(t ...*Txs) *AccountsUpdateOne {
+func (auo *AccountUpdateOne) AddTxs(t ...*Txs) *AccountUpdateOne {
 	ids := make([]int, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
@@ -365,7 +365,7 @@ func (auo *AccountsUpdateOne) AddTxs(t ...*Txs) *AccountsUpdateOne {
 }
 
 // RemoveTxIDs removes the txs edge to Txs by ids.
-func (auo *AccountsUpdateOne) RemoveTxIDs(ids ...int) *AccountsUpdateOne {
+func (auo *AccountUpdateOne) RemoveTxIDs(ids ...int) *AccountUpdateOne {
 	if auo.removedTxs == nil {
 		auo.removedTxs = make(map[int]struct{})
 	}
@@ -376,7 +376,7 @@ func (auo *AccountsUpdateOne) RemoveTxIDs(ids ...int) *AccountsUpdateOne {
 }
 
 // RemoveTxs removes txs edges to Txs.
-func (auo *AccountsUpdateOne) RemoveTxs(t ...*Txs) *AccountsUpdateOne {
+func (auo *AccountUpdateOne) RemoveTxs(t ...*Txs) *AccountUpdateOne {
 	ids := make([]int, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
@@ -385,12 +385,12 @@ func (auo *AccountsUpdateOne) RemoveTxs(t ...*Txs) *AccountsUpdateOne {
 }
 
 // Save executes the query and returns the updated entity.
-func (auo *AccountsUpdateOne) Save(ctx context.Context) (*Accounts, error) {
+func (auo *AccountUpdateOne) Save(ctx context.Context) (*Account, error) {
 	return auo.sqlSave(ctx)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (auo *AccountsUpdateOne) SaveX(ctx context.Context) *Accounts {
+func (auo *AccountUpdateOne) SaveX(ctx context.Context) *Account {
 	a, err := auo.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -399,27 +399,27 @@ func (auo *AccountsUpdateOne) SaveX(ctx context.Context) *Accounts {
 }
 
 // Exec executes the query on the entity.
-func (auo *AccountsUpdateOne) Exec(ctx context.Context) error {
+func (auo *AccountUpdateOne) Exec(ctx context.Context) error {
 	_, err := auo.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (auo *AccountsUpdateOne) ExecX(ctx context.Context) {
+func (auo *AccountUpdateOne) ExecX(ctx context.Context) {
 	if err := auo.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
-func (auo *AccountsUpdateOne) sqlSave(ctx context.Context) (a *Accounts, err error) {
+func (auo *AccountUpdateOne) sqlSave(ctx context.Context) (a *Account, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
-			Table:   accounts.Table,
-			Columns: accounts.Columns,
+			Table:   account.Table,
+			Columns: account.Columns,
 			ID: &sqlgraph.FieldSpec{
 				Value:  auo.id,
 				Type:   field.TypeInt,
-				Column: accounts.FieldID,
+				Column: account.FieldID,
 			},
 		},
 	}
@@ -427,57 +427,57 @@ func (auo *AccountsUpdateOne) sqlSave(ctx context.Context) (a *Accounts, err err
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
-			Column: accounts.FieldBalance,
+			Column: account.FieldBalance,
 		})
 	}
 	if value := auo.addbalance; value != nil {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
-			Column: accounts.FieldBalance,
+			Column: account.FieldBalance,
 		})
 	}
 	if value := auo.version; value != nil {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeUint8,
 			Value:  *value,
-			Column: accounts.FieldVersion,
+			Column: account.FieldVersion,
 		})
 	}
 	if value := auo.addversion; value != nil {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeUint8,
 			Value:  *value,
-			Column: accounts.FieldVersion,
+			Column: account.FieldVersion,
 		})
 	}
 	if value := auo.is_verified; value != nil {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
 			Value:  *value,
-			Column: accounts.FieldIsVerified,
+			Column: account.FieldIsVerified,
 		})
 	}
 	if value := auo.user_id; value != nil {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
-			Column: accounts.FieldUserID,
+			Column: account.FieldUserID,
 		})
 	}
 	if value := auo.adduser_id; value != nil {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
-			Column: accounts.FieldUserID,
+			Column: account.FieldUserID,
 		})
 	}
 	if nodes := auo.removedTxs; len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   accounts.TxsTable,
-			Columns: []string{accounts.TxsColumn},
+			Table:   account.TxsTable,
+			Columns: []string{account.TxsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -495,8 +495,8 @@ func (auo *AccountsUpdateOne) sqlSave(ctx context.Context) (a *Accounts, err err
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   accounts.TxsTable,
-			Columns: []string{accounts.TxsColumn},
+			Table:   account.TxsTable,
+			Columns: []string{account.TxsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -510,7 +510,7 @@ func (auo *AccountsUpdateOne) sqlSave(ctx context.Context) (a *Accounts, err err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	a = &Accounts{config: auo.config}
+	a = &Account{config: auo.config}
 	_spec.Assign = a.assignValues
 	_spec.ScanValues = a.scanValues()
 	if err = sqlgraph.UpdateNode(ctx, auo.driver, _spec); err != nil {

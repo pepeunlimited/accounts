@@ -5,7 +5,7 @@ import (
 	"github.com/pepeunlimited/accounts/pkg/accountsrpc"
 )
 
-func toAccountRPC(account *ent.Accounts) *accountsrpc.Account {
+func toAccountRPC(account *ent.Account) *accountsrpc.Account {
 	return &accountsrpc.Account{
 		Balance: account.Balance,
 		UserId:  account.UserID,

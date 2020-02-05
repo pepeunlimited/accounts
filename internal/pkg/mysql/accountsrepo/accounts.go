@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/pepeunlimited/accounts/internal/pkg/ent"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/accounts"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/account"
 	"github.com/pepeunlimited/microservice-kit/misc"
 	"log"
 	"strconv"
@@ -14,7 +14,7 @@ import (
 
 const (
 	updateBalanceSQL 	= "UPDATE accounts SET balance = ?, version = ? WHERE id = ? AND version = ?"
-	createTXsSQL 		= "INSERT INTO txs (tx_type, created_at, amount, accounts_id, reference_number) VALUES (?, ?, ?, ?, ?)"
+	createTXsSQL 		= "INSERT INTO txs (tx_type, created_at, amount, account_txs, reference_number) VALUES (?, ?, ?, ?, ?)"
 )
 
 var (
@@ -26,11 +26,11 @@ var (
 )
 
 type AccountsRepository interface {
-	CreateAccount(ctx context.Context, userId int64) (*ent.Accounts, error)
+	CreateAccount(ctx context.Context, userId int64) (*ent.Account, error)
 
-	GetAccountByUserID(ctx context.Context, userID int64) (*ent.Accounts, error)
+	GetAccountByUserID(ctx context.Context, userID int64) (*ent.Account, error)
 
-	GetAccountByUserAndAccountID(ctx context.Context, userID int64, accountID int) (*ent.Accounts, error)
+	GetAccountByUserAndAccountID(ctx context.Context, userID int64, accountID int) (*ent.Account, error)
 
 	Deposit(ctx context.Context, amount int64, toAccountID int, toUserID int64, referenceNumber *string) (*sql.Tx, error)
 	Withdraw(ctx context.Context, withdrawAmount int64, fromAccountID int, fromUserID int64, referenceNumber *string) (*sql.Tx, error)
@@ -38,7 +38,7 @@ type AccountsRepository interface {
 	DoWithdraw(ctx context.Context, withdrawAmount int64, fromAccountID int, fromUserID int64, referenceNumber *string) error
 	DoDeposit(ctx context.Context, amount int64, toAccountID int, toUserID int64, referenceNumber *string) error
 
-	UpdateAccountVerified(ctx context.Context, userID int64) (*ent.Accounts, error)
+	UpdateAccountVerified(ctx context.Context, userID int64) (*ent.Account, error)
 
 	DeleteAll(ctx context.Context)
 }
@@ -48,20 +48,20 @@ type accountsMySQL struct {
 	isDebug bool
 }
 
-func (mysql accountsMySQL) UpdateAccountVerified(ctx context.Context, userID int64) (*ent.Accounts, error) {
-	account, err := mysql.GetAccountByUserID(ctx, userID)
+func (mysql accountsMySQL) UpdateAccountVerified(ctx context.Context, userID int64) (*ent.Account, error) {
+	a, err := mysql.GetAccountByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
-	save, err := account.Update().SetIsVerified(true).Save(ctx)
+	save, err := a.Update().SetIsVerified(true).Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return save, nil
 }
 
-func (mysql accountsMySQL) GetAccountByUserID(ctx context.Context, userID int64) (*ent.Accounts, error) {
-	account, err := mysql.client.Accounts.Query().Where(accounts.UserID(userID)).Only(ctx)
+func (mysql accountsMySQL) GetAccountByUserID(ctx context.Context, userID int64) (*ent.Account, error) {
+	account, err := mysql.client.Account.Query().Where(account.UserID(userID)).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrAccountNotExist
@@ -71,7 +71,7 @@ func (mysql accountsMySQL) GetAccountByUserID(ctx context.Context, userID int64)
 	return account, nil
 }
 
-func (mysql accountsMySQL) CreateAccount(ctx context.Context, userId int64) (*ent.Accounts, error) {
+func (mysql accountsMySQL) CreateAccount(ctx context.Context, userId int64) (*ent.Account, error) {
 	return mysql.create(ctx, userId)
 }
 
@@ -137,11 +137,11 @@ func (mysql accountsMySQL) Withdraw(ctx context.Context, withdrawAmount int64, f
 
 func (mysql accountsMySQL) DeleteAll(ctx context.Context) {
 	mysql.client.Txs.Delete().ExecX(ctx)
-	mysql.client.Accounts.Delete().ExecX(ctx)
+	mysql.client.Account.Delete().ExecX(ctx)
 }
 
-func (mysql accountsMySQL) create(ctx context.Context, userId int64) (*ent.Accounts, error) {
-	account, err := mysql.client.Accounts.Create().SetBalance(0).SetIsVerified(false).SetUserID(userId).SetVersion(0).Save(ctx)
+func (mysql accountsMySQL) create(ctx context.Context, userId int64) (*ent.Account, error) {
+	account, err := mysql.client.Account.Create().SetBalance(0).SetIsVerified(false).SetUserID(userId).SetVersion(0).Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
 			return nil, ErrUserAccountExist
@@ -151,8 +151,8 @@ func (mysql accountsMySQL) create(ctx context.Context, userId int64) (*ent.Accou
 	return account, nil
 }
 
-func (mysql accountsMySQL) GetAccountByUserAndAccountID(ctx context.Context, userID int64, accountID int) (*ent.Accounts, error) {
-	account, err := mysql.client.Accounts.Query().Where(accounts.UserID(userID), accounts.ID(accountID)).Only(ctx)
+func (mysql accountsMySQL) GetAccountByUserAndAccountID(ctx context.Context, userID int64, accountID int) (*ent.Account, error) {
+	account, err := mysql.client.Account.Query().Where(account.UserID(userID), account.ID(accountID)).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrAccountNotExist

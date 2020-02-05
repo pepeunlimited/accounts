@@ -16,7 +16,7 @@ import (
 //
 var dsn string
 
-func ExampleAccounts() {
+func ExampleAccount() {
 	if dsn == "" {
 		return
 	}
@@ -27,7 +27,7 @@ func ExampleAccounts() {
 	}
 	defer drv.Close()
 	client := NewClient(Driver(drv))
-	// creating vertices for the accounts's edges.
+	// creating vertices for the account's edges.
 	t0 := client.Txs.
 		Create().
 		SetTxType("string").
@@ -37,8 +37,8 @@ func ExampleAccounts() {
 		SaveX(ctx)
 	log.Println("txs created:", t0)
 
-	// create accounts vertex with its edges.
-	a := client.Accounts.
+	// create account vertex with its edges.
+	a := client.Account.
 		Create().
 		SetBalance(1).
 		SetVersion(1).
@@ -46,7 +46,7 @@ func ExampleAccounts() {
 		SetUserID(1).
 		AddTxs(t0).
 		SaveX(ctx)
-	log.Println("accounts created:", a)
+	log.Println("account created:", a)
 
 	// query edges.
 	t0, err = a.QueryTxs().First(ctx)

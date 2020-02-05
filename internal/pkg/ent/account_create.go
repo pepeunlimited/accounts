@@ -5,15 +5,15 @@ package ent
 import (
 	"context"
 	"errors"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/accounts"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
 	"github.com/facebookincubator/ent/schema/field"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/account"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/txs"
 )
 
-// AccountsCreate is the builder for creating a Accounts entity.
-type AccountsCreate struct {
+// AccountCreate is the builder for creating a Account entity.
+type AccountCreate struct {
 	config
 	balance     *int64
 	version     *uint8
@@ -23,31 +23,31 @@ type AccountsCreate struct {
 }
 
 // SetBalance sets the balance field.
-func (ac *AccountsCreate) SetBalance(i int64) *AccountsCreate {
+func (ac *AccountCreate) SetBalance(i int64) *AccountCreate {
 	ac.balance = &i
 	return ac
 }
 
 // SetVersion sets the version field.
-func (ac *AccountsCreate) SetVersion(u uint8) *AccountsCreate {
+func (ac *AccountCreate) SetVersion(u uint8) *AccountCreate {
 	ac.version = &u
 	return ac
 }
 
 // SetIsVerified sets the is_verified field.
-func (ac *AccountsCreate) SetIsVerified(b bool) *AccountsCreate {
+func (ac *AccountCreate) SetIsVerified(b bool) *AccountCreate {
 	ac.is_verified = &b
 	return ac
 }
 
 // SetUserID sets the user_id field.
-func (ac *AccountsCreate) SetUserID(i int64) *AccountsCreate {
+func (ac *AccountCreate) SetUserID(i int64) *AccountCreate {
 	ac.user_id = &i
 	return ac
 }
 
 // AddTxIDs adds the txs edge to Txs by ids.
-func (ac *AccountsCreate) AddTxIDs(ids ...int) *AccountsCreate {
+func (ac *AccountCreate) AddTxIDs(ids ...int) *AccountCreate {
 	if ac.txs == nil {
 		ac.txs = make(map[int]struct{})
 	}
@@ -58,7 +58,7 @@ func (ac *AccountsCreate) AddTxIDs(ids ...int) *AccountsCreate {
 }
 
 // AddTxs adds the txs edges to Txs.
-func (ac *AccountsCreate) AddTxs(t ...*Txs) *AccountsCreate {
+func (ac *AccountCreate) AddTxs(t ...*Txs) *AccountCreate {
 	ids := make([]int, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
@@ -66,8 +66,8 @@ func (ac *AccountsCreate) AddTxs(t ...*Txs) *AccountsCreate {
 	return ac.AddTxIDs(ids...)
 }
 
-// Save creates the Accounts in the database.
-func (ac *AccountsCreate) Save(ctx context.Context) (*Accounts, error) {
+// Save creates the Account in the database.
+func (ac *AccountCreate) Save(ctx context.Context) (*Account, error) {
 	if ac.balance == nil {
 		return nil, errors.New("ent: missing required field \"balance\"")
 	}
@@ -84,7 +84,7 @@ func (ac *AccountsCreate) Save(ctx context.Context) (*Accounts, error) {
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (ac *AccountsCreate) SaveX(ctx context.Context) *Accounts {
+func (ac *AccountCreate) SaveX(ctx context.Context) *Account {
 	v, err := ac.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -92,14 +92,14 @@ func (ac *AccountsCreate) SaveX(ctx context.Context) *Accounts {
 	return v
 }
 
-func (ac *AccountsCreate) sqlSave(ctx context.Context) (*Accounts, error) {
+func (ac *AccountCreate) sqlSave(ctx context.Context) (*Account, error) {
 	var (
-		a     = &Accounts{config: ac.config}
+		a     = &Account{config: ac.config}
 		_spec = &sqlgraph.CreateSpec{
-			Table: accounts.Table,
+			Table: account.Table,
 			ID: &sqlgraph.FieldSpec{
 				Type:   field.TypeInt,
-				Column: accounts.FieldID,
+				Column: account.FieldID,
 			},
 		}
 	)
@@ -107,7 +107,7 @@ func (ac *AccountsCreate) sqlSave(ctx context.Context) (*Accounts, error) {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
-			Column: accounts.FieldBalance,
+			Column: account.FieldBalance,
 		})
 		a.Balance = *value
 	}
@@ -115,7 +115,7 @@ func (ac *AccountsCreate) sqlSave(ctx context.Context) (*Accounts, error) {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeUint8,
 			Value:  *value,
-			Column: accounts.FieldVersion,
+			Column: account.FieldVersion,
 		})
 		a.Version = *value
 	}
@@ -123,7 +123,7 @@ func (ac *AccountsCreate) sqlSave(ctx context.Context) (*Accounts, error) {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
 			Value:  *value,
-			Column: accounts.FieldIsVerified,
+			Column: account.FieldIsVerified,
 		})
 		a.IsVerified = *value
 	}
@@ -131,7 +131,7 @@ func (ac *AccountsCreate) sqlSave(ctx context.Context) (*Accounts, error) {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  *value,
-			Column: accounts.FieldUserID,
+			Column: account.FieldUserID,
 		})
 		a.UserID = *value
 	}
@@ -139,8 +139,8 @@ func (ac *AccountsCreate) sqlSave(ctx context.Context) (*Accounts, error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   accounts.TxsTable,
-			Columns: []string{accounts.TxsColumn},
+			Table:   account.TxsTable,
+			Columns: []string{account.TxsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

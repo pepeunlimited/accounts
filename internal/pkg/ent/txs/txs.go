@@ -24,11 +24,11 @@ const (
 	Table = "txs"
 	// AccountsTable is the table the holds the accounts relation/edge.
 	AccountsTable = "txs"
-	// AccountsInverseTable is the table name for the Accounts entity.
-	// It exists in this package in order to avoid circular dependency with the "accounts" package.
+	// AccountsInverseTable is the table name for the Account entity.
+	// It exists in this package in order to avoid circular dependency with the "account" package.
 	AccountsInverseTable = "accounts"
 	// AccountsColumn is the table column denoting the accounts relation/edge.
-	AccountsColumn = "accounts_id"
+	AccountsColumn = "account_txs"
 )
 
 // Columns holds all SQL columns for txs fields.
@@ -42,7 +42,7 @@ var Columns = []string{
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the Txs type.
 var ForeignKeys = []string{
-	"accounts_id",
+	"account_txs",
 }
 
 var (

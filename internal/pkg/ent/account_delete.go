@@ -4,33 +4,33 @@ package ent
 
 import (
 	"context"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/accounts"
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/predicate"
 
 	"github.com/facebookincubator/ent/dialect/sql"
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
 	"github.com/facebookincubator/ent/schema/field"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/account"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/predicate"
 )
 
-// AccountsDelete is the builder for deleting a Accounts entity.
-type AccountsDelete struct {
+// AccountDelete is the builder for deleting a Account entity.
+type AccountDelete struct {
 	config
-	predicates []predicate.Accounts
+	predicates []predicate.Account
 }
 
 // Where adds a new predicate to the delete builder.
-func (ad *AccountsDelete) Where(ps ...predicate.Accounts) *AccountsDelete {
+func (ad *AccountDelete) Where(ps ...predicate.Account) *AccountDelete {
 	ad.predicates = append(ad.predicates, ps...)
 	return ad
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (ad *AccountsDelete) Exec(ctx context.Context) (int, error) {
+func (ad *AccountDelete) Exec(ctx context.Context) (int, error) {
 	return ad.sqlExec(ctx)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ad *AccountsDelete) ExecX(ctx context.Context) int {
+func (ad *AccountDelete) ExecX(ctx context.Context) int {
 	n, err := ad.Exec(ctx)
 	if err != nil {
 		panic(err)
@@ -38,13 +38,13 @@ func (ad *AccountsDelete) ExecX(ctx context.Context) int {
 	return n
 }
 
-func (ad *AccountsDelete) sqlExec(ctx context.Context) (int, error) {
+func (ad *AccountDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := &sqlgraph.DeleteSpec{
 		Node: &sqlgraph.NodeSpec{
-			Table: accounts.Table,
+			Table: account.Table,
 			ID: &sqlgraph.FieldSpec{
 				Type:   field.TypeInt,
-				Column: accounts.FieldID,
+				Column: account.FieldID,
 			},
 		},
 	}
@@ -58,25 +58,25 @@ func (ad *AccountsDelete) sqlExec(ctx context.Context) (int, error) {
 	return sqlgraph.DeleteNodes(ctx, ad.driver, _spec)
 }
 
-// AccountsDeleteOne is the builder for deleting a single Accounts entity.
-type AccountsDeleteOne struct {
-	ad *AccountsDelete
+// AccountDeleteOne is the builder for deleting a single Account entity.
+type AccountDeleteOne struct {
+	ad *AccountDelete
 }
 
 // Exec executes the deletion query.
-func (ado *AccountsDeleteOne) Exec(ctx context.Context) error {
+func (ado *AccountDeleteOne) Exec(ctx context.Context) error {
 	n, err := ado.ad.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
 	case n == 0:
-		return &ErrNotFound{accounts.Label}
+		return &NotFoundError{account.Label}
 	default:
 		return nil
 	}
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ado *AccountsDeleteOne) ExecX(ctx context.Context) {
+func (ado *AccountDeleteOne) ExecX(ctx context.Context) {
 	ado.ad.ExecX(ctx)
 }

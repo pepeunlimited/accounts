@@ -3,11 +3,11 @@
 package txs
 
 import (
-	"github.com/pepeunlimited/accounts/internal/pkg/ent/predicate"
 	"time"
 
 	"github.com/facebookincubator/ent/dialect/sql"
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
+	"github.com/pepeunlimited/accounts/internal/pkg/ent/predicate"
 )
 
 // ID filters vertices based on their identifier.
@@ -581,7 +581,7 @@ func HasAccounts() predicate.Txs {
 }
 
 // HasAccountsWith applies the HasEdge predicate on the "accounts" edge with a given conditions (other predicates).
-func HasAccountsWith(preds ...predicate.Accounts) predicate.Txs {
+func HasAccountsWith(preds ...predicate.Account) predicate.Txs {
 	return predicate.Txs(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
