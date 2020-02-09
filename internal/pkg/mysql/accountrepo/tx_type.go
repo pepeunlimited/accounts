@@ -28,6 +28,6 @@ func TxTypeFromString(tt string) TxType {
 	case "transfer":
 		return 5
 	default:
-		return 0
+		return 1
 	}
 }
