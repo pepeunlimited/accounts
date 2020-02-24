@@ -1,3 +1,3 @@
-package accounts
+package account
 
 const RpcAccountsHost = "RPC_ACCOUNTS_HOST"

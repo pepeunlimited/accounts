@@ -1,22 +1,22 @@
 package errorz
 
 import (
-	"github.com/pepeunlimited/accounts/internal/pkg/mysql/account"
-	"github.com/pepeunlimited/accounts/pkg/accounts"
+	accountrepo "github.com/pepeunlimited/accounts/internal/pkg/mysql/account"
+	"github.com/pepeunlimited/accounts/pkg/account"
 	"github.com/twitchtv/twirp"
 	"log"
 )
 
 func Account(err error) error {
 	switch err {
-	case account.ErrAccountNotExist:
-		return twirp.NotFoundError(accounts.AccountNotFound)
-	case account.ErrUserAccountExist:
-		return twirp.NewError(twirp.AlreadyExists, accounts.AccountExist)
-	case account.ErrInvalidAmount:
-		return twirp.NewError(twirp.Aborted, accounts.AccountInvalidAmount)
-	case account.ErrLowAccountBalance:
-		return twirp.NewError(twirp.Aborted, accounts.LowAccountBalance)
+	case accountrepo.ErrAccountNotExist:
+		return twirp.NotFoundError(account.AccountNotFound)
+	case accountrepo.ErrUserAccountExist:
+		return twirp.NewError(twirp.AlreadyExists, account.AccountExist)
+	case accountrepo.ErrInvalidAmount:
+		return twirp.NewError(twirp.Aborted, account.AccountInvalidAmount)
+	case accountrepo.ErrLowAccountBalance:
+		return twirp.NewError(twirp.Aborted, account.LowAccountBalance)
 	}
 	log.Print("accounts-service: unknown error: "+err.Error())
 	return twirp.InternalErrorWith(err)

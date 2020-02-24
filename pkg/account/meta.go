@@ -1,4 +1,4 @@
-package accounts
+package account
 
 const (
 	AccountNotFound        	  	= "account_not_found"
