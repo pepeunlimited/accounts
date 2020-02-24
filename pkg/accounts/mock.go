@@ -1,4 +1,4 @@
-package accountsrpc
+package accounts
 
 import (
 	"context"

@@ -1,27 +1,27 @@
 package validator
 
 import (
-	"github.com/pepeunlimited/accounts/pkg/accountsrpc"
+	"github.com/pepeunlimited/accounts/pkg/accounts"
 	"github.com/twitchtv/twirp"
 )
 
 type AccountServerValidator struct {}
 
-func (v AccountServerValidator) CreateAccount(params *accountsrpc.CreateAccountParams) error {
+func (v AccountServerValidator) CreateAccount(params *accounts.CreateAccountParams) error {
 	if params.UserId == 0 {
 		return twirp.RequiredArgumentError("user_id")
 	}
 	return nil
 }
 
-func (v AccountServerValidator) GetAccount(params *accountsrpc.GetAccountParams) error {
+func (v AccountServerValidator) GetAccount(params *accounts.GetAccountParams) error {
 	if params.UserId == 0 {
 		return twirp.RequiredArgumentError("user_id")
 	}
 	return nil
 }
 
-func (v AccountServerValidator) CreateDeposit(params *accountsrpc.CreateDepositParams) error {
+func (v AccountServerValidator) CreateDeposit(params *accounts.CreateDepositParams) error {
 	if params.Amount < 0 {
 		return twirp.InvalidArgumentError("amount","amount < 0")
 	}
@@ -31,7 +31,7 @@ func (v AccountServerValidator) CreateDeposit(params *accountsrpc.CreateDepositP
 	return nil
 }
 
-func (v AccountServerValidator) CreateWithdraw(params *accountsrpc.CreateWithdrawParams) error {
+func (v AccountServerValidator) CreateWithdraw(params *accounts.CreateWithdrawParams) error {
 	if params.UserId == 0 {
 		return twirp.RequiredArgumentError("user_id")
 	}
@@ -41,7 +41,7 @@ func (v AccountServerValidator) CreateWithdraw(params *accountsrpc.CreateWithdra
 	return nil
 }
 
-func (v AccountServerValidator) UpdateAccountVerified(params *accountsrpc.UpdateAccountVerifiedParams) error {
+func (v AccountServerValidator) UpdateAccountVerified(params *accounts.UpdateAccountVerifiedParams) error {
 	if params.UserId == 0 {
 		return twirp.RequiredArgumentError("user_id")
 	}

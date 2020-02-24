@@ -1,4 +1,4 @@
-package accountsrpc
+package accounts
 
 const (
 	AccountNotFound        	  	= "account_not_found"

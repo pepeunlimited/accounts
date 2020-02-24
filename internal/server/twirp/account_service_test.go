@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/pepeunlimited/accounts/internal/pkg/ent"
-	"github.com/pepeunlimited/accounts/pkg/accountsrpc"
+	"github.com/pepeunlimited/accounts/pkg/accounts"
 	"github.com/pepeunlimited/microservice-kit/rpcz"
 	"github.com/twitchtv/twirp"
 	"testing"
@@ -16,7 +16,7 @@ func TestAccountServer_CreateAccountAndGet(t *testing.T) {
 
 	server := NewAccountServer(ent.NewEntClient())
 	server.accounts.DeleteAll(ctx)
-	coin, err := server.CreateAccount(ctx, &accountsrpc.CreateAccountParams{
+	coin, err := server.CreateAccount(ctx, &accounts.CreateAccountParams{
 		UserId:userId,
 	})
 	if err != nil {
@@ -26,7 +26,7 @@ func TestAccountServer_CreateAccountAndGet(t *testing.T) {
 	if coin == nil {
 		t.FailNow()
 	}
-	account, err := server.GetAccount(ctx, &accountsrpc.GetAccountParams{
+	account, err := server.GetAccount(ctx, &accounts.GetAccountParams{
 		UserId:userId,
 	})
 	if err != nil {
@@ -45,7 +45,7 @@ func TestAccountServer_NotFound(t *testing.T) {
 	server := NewAccountServer(ent.NewEntClient())
 	server.accounts.DeleteAll(ctx)
 
-	account, err := server.GetAccount(ctx, &accountsrpc.GetAccountParams{
+	account, err := server.GetAccount(ctx, &accounts.GetAccountParams{
 		UserId:userId,
 	})
 	if err == nil {
@@ -54,8 +54,8 @@ func TestAccountServer_NotFound(t *testing.T) {
 	if account != nil {
 		t.FailNow()
 	}
-	if err.(twirp.Error).Msg() != accountsrpc.AccountNotFound {
-		t.Error(err.(twirp.Error).Meta(accountsrpc.AccountNotFound))
+	if err.(twirp.Error).Msg() != accounts.AccountNotFound {
+		t.Error(err.(twirp.Error).Meta(accounts.AccountNotFound))
 		t.FailNow()
 	}
 }
@@ -67,7 +67,7 @@ func TestAccountServer_CreateDeposit(t *testing.T) {
 	server := NewAccountServer(ent.NewEntClient())
 	server.accounts.DeleteAll(ctx)
 
-	coin, err := server.CreateAccount(ctx, &accountsrpc.CreateAccountParams{
+	coin, err := server.CreateAccount(ctx, &accounts.CreateAccountParams{
 		UserId:      userId,
 	})
 	if err != nil {
@@ -75,7 +75,7 @@ func TestAccountServer_CreateDeposit(t *testing.T) {
 		t.FailNow()
 	}
 	server.accounts.DoDeposit(ctx, 10, int(coin.Id), userId, nil)
-	account, err := server.CreateDeposit(ctx, &accountsrpc.CreateDepositParams{
+	account, err := server.CreateDeposit(ctx, &accounts.CreateDepositParams{
 		UserId:      userId,
 		Amount:      10,
 	})
@@ -95,19 +95,19 @@ func TestAccountServer_CreateWithdraw(t *testing.T) {
 	server := NewAccountServer(ent.NewEntClient())
 	server.accounts.DeleteAll(ctx)
 
-	_, err := server.CreateAccount(ctx, &accountsrpc.CreateAccountParams{
+	_, err := server.CreateAccount(ctx, &accounts.CreateAccountParams{
 		UserId:      userId,
 	})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-	server.CreateDeposit(ctx, &accountsrpc.CreateDepositParams{
+	server.CreateDeposit(ctx, &accounts.CreateDepositParams{
 		UserId:          userId,
 		Amount:          20,
 		ReferenceNumber: &wrappers.StringValue{Value: "reference-number-0"},
 	})
-	_, err = server.UpdateAccountVerified(ctx, &accountsrpc.UpdateAccountVerifiedParams{
+	_, err = server.UpdateAccountVerified(ctx, &accounts.UpdateAccountVerifiedParams{
 		UserId: userId,
 	})
 	if err != nil {
@@ -115,7 +115,7 @@ func TestAccountServer_CreateWithdraw(t *testing.T) {
 		t.FailNow()
 	}
 
-	withdrawed, err := server.CreateWithdraw(ctx, &accountsrpc.CreateWithdrawParams{
+	withdrawed, err := server.CreateWithdraw(ctx, &accounts.CreateWithdrawParams{
 		UserId: userId,
 		Amount: -20,
 	})

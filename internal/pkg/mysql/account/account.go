@@ -1,4 +1,4 @@
-package accountrepo
+package account
 
 import (
 	"context"
@@ -221,6 +221,6 @@ func rollback(tx *sql.Tx) {
 	}
 }
 
-func NewAccountRepository(client *ent.Client) AccountRepository {
+func New(client *ent.Client) AccountRepository {
 	return accountsMySQL{client:client, isDebug:isDebug()}
 }

@@ -1,4 +1,4 @@
-package accountrepo
+package account
 
 import "strings"
 

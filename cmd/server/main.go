@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/pepeunlimited/accounts/internal/pkg/ent"
 	"github.com/pepeunlimited/accounts/internal/server/twirp"
-	"github.com/pepeunlimited/accounts/pkg/accountsrpc"
+	"github.com/pepeunlimited/accounts/pkg/accounts"
 	"github.com/pepeunlimited/microservice-kit/headers"
 	"github.com/pepeunlimited/microservice-kit/middleware"
 	"log"
@@ -18,7 +18,7 @@ func main() {
 	log.Printf("Starting the AccountServer... version=[%v]", Version)
 
 	client := ent.NewEntClient()
-	ts := accountsrpc.NewAccountServiceServer(twirp.NewAccountServer(client), nil)
+	ts := accounts.NewAccountServiceServer(twirp.NewAccountServer(client), nil)
 
 	mux := http.NewServeMux()
 	mux.Handle(ts.PathPrefix(), middleware.Adapt(ts, headers.UserId()))
