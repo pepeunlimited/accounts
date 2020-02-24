@@ -2,7 +2,7 @@ package twirp
 
 import (
 	"github.com/pepeunlimited/accounts/internal/pkg/ent"
-	"github.com/pepeunlimited/accounts/pkg/account"
+	"github.com/pepeunlimited/accounts/pkg/rpc/account"
 )
 
 func toAccountRPC(from *ent.Account) *account.Account {

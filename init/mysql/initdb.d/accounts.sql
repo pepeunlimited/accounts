@@ -3,7 +3,7 @@ CREATE DATABASE IF NOT EXISTS accounts CHARACTER SET utf8mb4 COLLATE utf8mb4_uni
 USE accounts;
 
 CREATE TABLE accounts (
-    id              INT(10) NOT NULL AUTO_INCREMENT,   --
+    id              BIGINT NOT NULL AUTO_INCREMENT,   --
     balance         BIGINT NOT NULL,                   -- int64 -9223372036854775807 - 9223372036854775807
     version         TINYINT UNSIGNED NOT NULL,         -- uin8 0-255 optimistic concurrency control (OCC)
     user_id         BIGINT UNIQUE NOT NULL,            --
@@ -28,7 +28,7 @@ CREATE TABLE txs (
     tx_type             CHAR(10) NOT NULL,                     -- withdraw, deposit, charge
     created_at          DATETIME(3) NOT NULL,                  --
     amount              BIGINT NOT NULL,                       -- int64 -9223372036854775807 - 9223372036854775807
-    account_txs         INT(10) NOT NULL,                      --
+    account_txs         BIGINT NOT NULL,                      --
     reference_number    CHAR(36) NULL,                         --
     FOREIGN KEY (account_txs) REFERENCES accounts (id),        --
     PRIMARY KEY (id)

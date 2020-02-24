@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/pepeunlimited/accounts/internal/pkg/ent"
 	"github.com/pepeunlimited/accounts/internal/server/twirp"
-	"github.com/pepeunlimited/accounts/pkg/account"
+	"github.com/pepeunlimited/accounts/pkg/rpc/account"
 	"github.com/pepeunlimited/microservice-kit/headers"
 	"github.com/pepeunlimited/microservice-kit/middleware"
 	"log"

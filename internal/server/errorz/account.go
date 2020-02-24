@@ -2,7 +2,7 @@ package errorz
 
 import (
 	accountrepo "github.com/pepeunlimited/accounts/internal/pkg/mysql/account"
-	"github.com/pepeunlimited/accounts/pkg/account"
+	"github.com/pepeunlimited/accounts/pkg/rpc/account"
 	"github.com/twitchtv/twirp"
 	"log"
 )

@@ -1,7 +1,7 @@
 package validator
 
 import (
-	"github.com/pepeunlimited/accounts/pkg/account"
+	"github.com/pepeunlimited/accounts/pkg/rpc/account"
 	"github.com/twitchtv/twirp"
 )
 

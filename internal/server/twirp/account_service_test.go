@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/pepeunlimited/accounts/internal/pkg/ent"
-	"github.com/pepeunlimited/accounts/pkg/account"
+	"github.com/pepeunlimited/accounts/pkg/rpc/account"
 	"github.com/pepeunlimited/microservice-kit/rpcz"
 	"github.com/twitchtv/twirp"
 	"testing"
